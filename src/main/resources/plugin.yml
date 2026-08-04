@@ -1,0 +1,20 @@
+name: CustomDeathMessages
+version: '1.0.0'
+main: com.customdeath.CustomDeathMessages
+api-version: '1.20'
+authors:
+  - Agent Playground
+description: 个性化死亡播报插件，替代原版死亡信息，支持自定义文案与颜色
+
+commands:
+  customdeath:
+    description: 自定义死亡消息插件主命令
+    usage: /customdeath <reload|version>
+    aliases:
+      - cdm
+    permission: customdeath.reload
+
+permissions:
+  customdeath.reload:
+    description: 允许重载插件配置
+    default: op

@@ -1,0 +1,166 @@
+# ============================================================
+#  CustomDeathMessages 配置文件
+#  ----------------------------------------------------------
+#  消息格式使用 MiniMessage 语法（Paper 官方推荐的现代格式），
+#  支持颜色、渐变、粗体、斜体、下划线、点击动作等丰富样式。
+#
+#  常用颜色/样式标签：
+#    <red> <gold> <green> <aqua> <blue> <dark_purple> <gray> <white>
+#    <bold> <italic> <underlined> <strikethrough> <obfuscated> <reset>
+#    <gradient:red:gold> 双色渐变
+#    <gradient:#ff0000:#0000ff:red> 多色渐变（十六进制）
+#    <rainbow> 彩虹渐变
+#    <#FF5500> 任意十六进制颜色
+#    <hover:show_text:'...'>...</hover> 悬停文本
+#
+#  可用占位符（在消息模板中直接书写）：
+#    {player}  死亡玩家名（自动套用 player-name-color 颜色）
+#    {killer}  击杀者名（自动套用 killer-name-color 颜色，无击杀者时为空）
+#    {weapon}  击杀武器名（无武器时为空）
+#    {damage}  造成死亡的最后一次伤害数值
+#    {world}   死亡所在世界名
+# ============================================================
+
+settings:
+  # 是否启用插件（false 时完全恢复原版死亡信息）
+  enabled: true
+
+  # 死亡播报的广播范围：
+  #   global - 全服所有玩家可见
+  #   world  - 仅死亡玩家所在世界的玩家可见
+  #   nearby - 仅死亡地点 nearby-radius 格范围内的玩家可见
+  broadcast-mode: global
+
+  # broadcast-mode 为 nearby 时的生效半径（单位：格）
+  nearby-radius: 64
+
+  # 同一条文案有多条时如何选择：
+  #   random - 每次随机选一条
+  #   cycle  - 按顺序轮流使用（保证所有文案都会被用到）
+  message-selection: random
+
+  # 是否在控制台输出原始英文死亡原因（便于排查与编写对应文案）
+  console-log-reason: false
+
+  # 是否在控制台打印最终播报的死亡消息（纯文本，无颜色标签）
+  # 开启后控制台日志会输出类似：Steve 从高处跌落，摔成了肉饼
+  console-log-death: true
+
+  # 死亡玩家名的颜色样式（MiniMessage 标签）
+  player-name-color: "<yellow>"
+
+  # 击杀者名字的颜色样式
+  killer-name-color: "<red>"
+
+  # 死亡音效设置
+  death-sound:
+    # 是否播放死亡音效
+    enabled: true
+    # 音效类型（Bukkit Sound 枚举名，常见可选值）：
+    #   ENTITY_PLAYER_DEATH        - 原版玩家死亡音
+    #   ENTITY_LIGHTNING_BOLT_THUNDER - 雷声
+    #   ENTITY_WITHER_DEATH        - 凋灵死亡音
+    #   ENTITY_VILLAGER_DEATH      - 村民死亡音
+    #   BLOCK_ANVIL_LAND           - 铁砧落地
+    #   ENTITY_GHAST_SCREAM        - 恶魂尖叫
+    #   完整列表见 Bukkit API 的 org.bukkit.Sound 枚举
+    sound: ENTITY_PLAYER_DEATH
+    # 音量（0.0 ~ 2.0，越大传播越远）
+    volume: 1.0
+    # 音调（0.5 ~ 2.0，1.0 为正常，越大音调越高）
+    pitch: 1.0
+    # 播放对象：
+    #   victim   - 仅死亡玩家本人听到
+    #   nearby   - 死亡地点附近的玩家听到（范围由 volume 决定）
+    #   everyone - 全服所有在线玩家听到
+    target: everyone
+
+# ============================================================
+#  死亡消息模板
+#  ----------------------------------------------------------
+#  每个分类下列出若干条文案，插件会按 message-selection
+#  指定的策略（随机/轮流）从中挑选一条进行播报。
+#  未在下方配置的分类会使用 default 兜底文案。
+# ============================================================
+messages:
+
+  # ---------------- 环境伤害 ----------------
+  fall:
+    - "<red>{player}</red> 从高处跌落，摔成了肉饼"
+    - "<gold><bold>{player}</bold></gold> 体验了一把自由落体运动"
+    - "<gradient:gold:red>{player}</gradient> 坠楼了，场面惨不忍睹"
+
+  fire:
+    - "<red>{player}</red> 在火焰中化为了灰烬"
+    - "<red><bold>{player}</bold></red> 自焚成功，达成成就：火焰化"
+
+  lava:
+    - "<gradient:#ff6600:#ff0000>{player}</gradient> 在岩浆里泡了个澡，然后熟了"
+    - "<red>{player}</red> 跳进了岩浆，选择火葬"
+
+  drowning:
+    - "<aqua>{player}</aqua> 在深水中失去了呼吸"
+    - "<blue>{player}</blue> 试图在水下长期生存，失败了"
+
+  suffocation:
+    - "<gray>{player}</gray> 被挤死在墙里"
+    - "<gray>{player}</gray> 挑战物理学，结果被墙战胜了"
+
+  void:
+    - "<dark_purple>{player}</dark_purple> 坠入了无尽的虚空"
+    - "<dark_purple><bold>{player}</bold></dark_purple> 掉出了世界边缘"
+
+  explosion:
+    - "<gold>{player}</gold> 被炸得四分五裂"
+    - "<gold><bold>{player}</bold></gold> 遭遇了爆炸艺术"
+
+  lightning:
+    - "<yellow>{player}</yellow> 被天雷劈中，装逼遭雷劈"
+
+  magic:
+    - "<light_purple>{player}</light_purple> 死于神秘的魔法力量"
+
+  poison:
+    - "<green>{player}</green> 中毒身亡，痛苦而漫长"
+
+  starvation:
+    - "<gold>{player}</gold> 活活饿死了，旁边可能还有面包"
+
+  fall_block:
+    - "<gray>{player}</gray> 被下落的方块压扁了"
+
+  # ---------------- PVP（玩家击杀） ----------------
+  pvp:
+    - "<red>{player}</red> 被 <red><bold>{killer}</bold></red> 用 <gold>{weapon}</gold> 击杀了"
+    - "<red>{player}</red> 倒在了 <red><bold>{killer}</bold></red> 的脚下"
+    - "<gradient:red:gold>{player}</gradient> 死于 <red><bold>{killer}</bold></red> 之手，技不如人"
+
+  # ---------------- 怪物击杀（通用兜底） ----------------
+  monster:
+    - "<red>{player}</red> 被 <dark_red>{killer}</dark_red> 残忍地杀害了"
+    - "<red>{player}</red> 外出觅食，反被 {killer} 吃掉了"
+
+  # ---------------- 特定怪物（可选，未配置则使用 monster） ----------------
+  # key 为怪物英文类型名的小写，例如 zombie / skeleton / creeper / spider
+  # 也可以直接用中文 key，如 "僵尸"
+  zombie:
+    - "<green>{player}</green> 被僵尸啃食殆尽"
+    - "<dark_green>{player}</dark_green> 加入了僵尸的晚宴菜单"
+
+  skeleton:
+    - "<gray>{player}</gray> 被骷髅的箭矢射穿了心脏"
+
+  creeper:
+    - "<green>{player}</green> 被苦力怕的热情问候炸飞了"
+    - "<green><bold>{player}</bold></green> 和苦力怕来了个亲密接触"
+
+  spider:
+    - "<dark_gray>{player}</dark_gray> 成为了蜘蛛的美餐"
+
+  enderman:
+    - "<dark_purple>{player}</dark_purple> 惹怒了末影人，被瞬移秒杀"
+
+  # ---------------- 兜底（任何未匹配到的情况） ----------------
+  default:
+    - "<red>{player}</red> 死了"
+    - "<gray>{player}</gray> 永远地离开了这个世界"
