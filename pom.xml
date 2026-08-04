@@ -26,16 +26,14 @@
 
     <dependencies>
         <!--
-            Paper API：编译期依赖，运行期由 Paper 服务器提供。
-            当前使用 1.20.4（兼容 Java 17）。
-            如需 Paper 1.21+，请将版本改为 1.21.x-R0.1-SNAPSHOT，
-            并将 maven.compiler.release 改为 21（需安装 JDK 21），
-            同时将 plugin.yml 中 api-version 改为 '1.21'。
+            Paper API：编译期依赖，运行期由服务器提供。
+            目标服务器为 Purpur 26.2（MC 1.21.1），故锁定 1.21.1-R0.1-SNAPSHOT。
+            maven.compiler.release 保持 17（兼容 Java 17+ 运行时）。
         -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.4-R0.1-SNAPSHOT</version>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

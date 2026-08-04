@@ -75,6 +75,7 @@ settings:
     #   everyone - 全服所有在线玩家听到
     target: everyone
 
+
 # ============================================================
 #  死亡消息模板
 #  ----------------------------------------------------------
@@ -89,56 +90,171 @@ messages:
     - "<red>{player}</red> 从高处跌落，摔成了肉饼"
     - "<gold><bold>{player}</bold></gold> 体验了一把自由落体运动"
     - "<gradient:gold:red>{player}</gradient> 坠楼了，场面惨不忍睹"
+    - "<red>{player}</red> 以为自己是猫，结果发现并不会脚着地"
+    - "<gold>{player}</gold> 忘记了重力是存在的，付出了生命的代价"
+    - "<gradient:red:#ff8800>{player}</gradient> 从悬崖上一跃而下，不是飞行，是坠落"
+    - "<red><bold>{player}</bold></red> 玩了一辈子的跑酷，最后一次没跑过去"
+    - "<gold>{player}</gold> 试图模仿鸟儿飞翔，可惜没有翅膀"
+    - "<gradient:gold:yellow>{player}</gradient> 在高空失足，下落速度越来越快……然后就没有然后了"
+    - "<red>{player}</red> 与地面来了个亲密接触，地面赢了"
 
   fire:
     - "<red>{player}</red> 在火焰中化为了灰烬"
     - "<red><bold>{player}</bold></red> 自焚成功，达成成就：火焰化"
+    - "<gradient:#ff0000:#ffaa00>{player}</gradient> 被火烧成了一堆碳"
+    - "<red>{player}</red> 玩火自焚，古人诚不欺我"
+    - "<gold>{player}</gold> 在火海中跳了一支舞，然后跳不动了"
+    - "<red>{player}</red> 以为自己防火，实际上并不防"
+    - "<gradient:#ff4400:#ff0000>{player}</gradient> 的生命如火焰般燃烧殆尽"
+    - "<red><bold>{player}</bold></red> 决定和火焰做朋友，火焰不怎么同意"
+    - "<gold>{player}</gold> 想要温暖，结果一不小心温暖过头了"
+    - "<red>{player}</red> 在烈火中永生——抱歉，是永灭"
 
   lava:
     - "<gradient:#ff6600:#ff0000>{player}</gradient> 在岩浆里泡了个澡，然后熟了"
     - "<red>{player}</red> 跳进了岩浆，选择火葬"
+    - "<gradient:#ff8800:#ff0000>{player}</gradient> 想体验温泉，结果选错了池子"
+    - "<red><bold>{player}</bold></red> 被岩浆热情地拥抱了，再也挣脱不开"
+    - "<gold>{player}</gold> 以为自己能跑过岩浆流，事实证明他错了"
+    - "<red>{player}</red> 在岩浆湖里游了个泳，这是最后一次游泳了"
+    - "<gradient:#ff4400:#ff0000>{player}</gradient> 把岩浆当成了橘子汽水，代价惨重"
+    - "<red>{player}</red> 一脚踩进岩浆，瞬间化为青烟"
+    - "<gold><bold>{player}</bold></gold> 想要岩浆做的雕塑，结果自己变成了雕塑"
+    - "<red>{player}</red> 误判了岩浆的深度，再也没能上来"
 
   drowning:
     - "<aqua>{player}</aqua> 在深水中失去了呼吸"
     - "<blue>{player}</blue> 试图在水下长期生存，失败了"
+    - "<aqua><bold>{player}</bold></aqua> 忘记了自己不是鱼"
+    - "<blue>{player}</blue> 水性太好，好到再也不需要呼吸了"
+    - "<gradient:blue:aqua>{player}</gradient> 沉入了水底，化作了珊瑚的一部分"
+    - "<aqua>{player}</aqua> 在水下数羊，数着数着就没气了"
+    - "<blue><bold>{player}</bold></blue> 想挑战憋气世界纪录，成绩是：永久"
+    - "<aqua>{player}</aqua> 被水温柔地拥抱，再也没有松开"
+    - "<blue>{player}</blue> 的肺部进了水，从此长眠于水底"
+    - "<gradient:aqua:blue>{player}</gradient> 成为了海洋的祭品，安息吧"
 
   suffocation:
     - "<gray>{player}</gray> 被挤死在墙里"
     - "<gray>{player}</gray> 挑战物理学，结果被墙战胜了"
+    - "<dark_gray>{player}</dark_gray> 试图穿墙术，失败了"
+    - "<gray><bold>{player}</bold></gray> 和墙壁来了一场亲密接触，再也没有分开"
+    - "<gray>{player}</gray> 被方块吞没了，连声音都发不出来"
+    - "<dark_gray>{player}</dark_gray> 在墙里安了家，代价是永远住下去"
+    - "<gray>{player}</gray> 以为自己能挤过去，事实证明墙更硬"
+    - "<dark_gray><bold>{player}</bold></dark_gray> 被困在了两堵墙之间，呼吸越来越困难"
+    - "<gray>{player}</gray> 想要个避风港，结果选了个窒息的地方"
+    - "<dark_gray>{player}</dark_gray> 在方块里获得了永生——字面意义上的"
 
   void:
     - "<dark_purple>{player}</dark_purple> 坠入了无尽的虚空"
     - "<dark_purple><bold>{player}</bold></dark_purple> 掉出了世界边缘"
+    - "<gradient:dark_purple:black>{player}</gradient> 消失在了虚空中，连尸体都找不到"
+    - "<dark_purple>{player}</dark_purple> 探索了世界的尽头，再也没回来"
+    - "<light_purple>{player}</light_purple> 被虚空吞噬，无声无息"
+    - "<dark_purple><bold>{player}</bold></dark_purple> 在虚空中迷失了方向，永远地迷失了"
+    - "<dark_purple>{player}</dark_purple> 想看看世界的背面，看到了，也回不来了"
+    - "<gradient:black:dark_purple>{player}</gradient> 的灵魂飘向了虚空深处"
+    - "<dark_purple>{player}</dark_purple> 触碰了世界的边界，被抹除了存在"
+    - "<light_purple><bold>{player}</bold></light_purple> 在虚无中消散，如同从未存在过"
 
   explosion:
     - "<gold>{player}</gold> 被炸得四分五裂"
     - "<gold><bold>{player}</bold></gold> 遭遇了爆炸艺术"
+    - "<gradient:gold:red>{player}</gradient> 化作了烟花，在空中绽放"
+    - "<gold>{player}</gold> 距离爆炸物太近了，近到成为了爆炸的一部分"
+    - "<red><bold>{player}</bold></red> 被炸上了天，再也没有落地"
+    - "<gold>{player}</gold> 以为TNT是装饰品，用生命证明了它不是"
+    - "<gradient:#ffaa00:#ff0000>{player}</gradient> 在爆炸中体验了飞一般的感觉"
+    - "<gold>{player}</gold> 离爆炸现场只有一个方块的距离，差了那一个方块"
+    - "<red><bold>{player}</bold></red> 被冲击波撕碎，场面过于壮观"
+    - "<gold>{player}</gold> 的最后一句话是：这玩意儿应该不会炸吧？"
 
   lightning:
     - "<yellow>{player}</yellow> 被天雷劈中，装逼遭雷劈"
+    - "<yellow><bold>{player}</bold></yellow> 化身为避雷针，尽职尽责"
+    - "<gradient:yellow:white>{player}</gradient> 被雷神选中，成为了祭品"
+    - "<yellow>{player}</yellow> 在雷雨天举了根铁棍，后果自负"
+    - "<yellow><bold>{player}</bold></yellow> 被闪电击中，瞬间碳化"
+    - "<yellow>{player}</yellow> 和闪电来了个面对面，闪电赢了"
+    - "<gradient:white:yellow>{player}</gradient> 的身体被电流贯穿，冒出了青烟"
+    - "<yellow>{player}</yellow> 站在了雷暴的最高点，成为了天然的引雷塔"
+    - "<yellow><bold>{player}</bold></yellow> 以为雷不会劈同一处两次，结果他站的就是那处"
+    - "<yellow>{player}</yellow> 在暴雨中发誓，雷神当真了"
 
   magic:
     - "<light_purple>{player}</light_purple> 死于神秘的魔法力量"
+    - "<light_purple><bold>{player}</bold></light_purple> 被禁咒击中，灵魂消散"
+    - "<gradient:light_purple:dark_purple>{player}</gradient> 的生命力被魔法抽干"
+    - "<light_purple>{player}</light_purple> 中的不是毒，是诅咒"
+    - "<dark_purple>{player}</dark_purple> 被魔法反噬，付出了生命的代价"
+    - "<light_purple><bold>{player}</bold></light_purple> 的魔法防御为零，被一击毙命"
+    - "<gradient:dark_purple:light_purple>{player}</gradient> 被未知的法术吞噬"
+    - "<light_purple>{player}</light_purple> 感受到了魔法的力量，是在死前最后一秒"
+    - "<dark_purple><bold>{player}</bold></dark_purple> 被奥术能量撕成了碎片"
+    - "<light_purple>{player}</light_purple> 的身体在紫色的光芒中化为虚无"
 
   poison:
     - "<green>{player}</green> 中毒身亡，痛苦而漫长"
+    - "<dark_green>{player}</dark_green> 毒发身亡，脸色发青"
+    - "<gradient:green:dark_green>{player}</gradient> 被毒液侵蚀了全身"
+    - "<green><bold>{player}</bold></green> 忘记喝牛奶了，代价是生命"
+    - "<dark_green>{player}</dark_green> 中的毒太深，回天乏术"
+    - "<green>{player}</green> 的血液变成了绿色，然后停止了流动"
+    - "<gradient:dark_green:green>{player}</gradient> 被剧毒慢慢吞噬"
+    - "<green><bold>{player}</bold></green> 以为那瓶药水是补品，其实是毒药"
+    - "<dark_green>{player}</dark_green> 在毒雾中迷失，再也没有走出来"
+    - "<green>{player}</green> 毒性蔓延至心脏，一切都太迟了"
 
   starvation:
     - "<gold>{player}</gold> 活活饿死了，旁边可能还有面包"
+    - "<gold><bold>{player}</bold></gold> 的肚子唱完了最后一首歌"
+    - "<gradient:gold:gray>{player}</gradient> 饿得前胸贴后背，然后就没气了"
+    - "<gold>{player}</gold> 忘记了吃饭这件事，永远地忘记了"
+    - "<gold><bold>{player}</bold></gold> 在食物堆旁边饿死了，多么讽刺"
+    - "<gold>{player}</gold> 的饥饿值归零，生命也随之归零"
+    - "<gradient:gray:gold>{player}</gradient> 被饥饿击败，倒在了觅食的路上"
+    - "<gold>{player}</gold> 以为再撑一会儿就好了，没有好了"
+    - "<gold><bold>{player}</bold></gold> 减肥过度，减掉了生命"
+    - "<gold>{player}</gold> 的最后一句话是：好饿啊……"
 
   fall_block:
     - "<gray>{player}</gray> 被下落的方块压扁了"
+    - "<dark_gray>{player}</dark_gray> 被铁砧行了个注目礼，以命相许"
+    - "<gray><bold>{player}</bold></gray> 头顶有东西掉下来，没来得及躲"
+    - "<gray>{player}</gray> 被落下的沙子活埋了"
+    - "<dark_gray>{player}</dark_gray> 想挖沙子，沙子也想挖他"
+    - "<gray>{player}</gray> 被坠落的方块砸成了肉泥"
+    - "<dark_gray><bold>{player}</bold></dark_gray> 的安全帽不够厚，挡不住这一下"
+    - "<gray>{player}</gray> 在矿洞里听到了轰隆声，然后就听不到了"
+    - "<dark_gray>{player}</dark_gray> 被头顶的砾石送上了黄泉路"
+    - "<gray><bold>{player}</bold></gray> 头顶悬着的方块终于掉下来了，正好砸中"
 
   # ---------------- PVP（玩家击杀） ----------------
   pvp:
     - "<red>{player}</red> 被 <red><bold>{killer}</bold></red> 用 <gold>{weapon}</gold> 击杀了"
     - "<red>{player}</red> 倒在了 <red><bold>{killer}</bold></red> 的脚下"
     - "<gradient:red:gold>{player}</gradient> 死于 <red><bold>{killer}</bold></red> 之手，技不如人"
+    - "<red>{player}</red> 被 <red><bold>{killer}</bold></red> 用 <gold>{weapon}</gold> 上了生动的一课"
+    - "<red><bold>{player}</bold></red> 向 <red><bold>{killer}</bold></red> 发起了挑战，再也没站起来"
+    - "<gradient:red:dark_red>{player}</gradient> 成为了 <red><bold>{killer}</bold></red> 的刀下亡魂"
+    - "<red>{player}</red> 在与 <red><bold>{killer}</bold></red> 的对决中落败"
+    - "<red><bold>{player}</bold></red> 被 <red><bold>{killer}</bold></red> 的 <gold>{weapon}</gold> 终结了一切"
+    - "<gradient:gold:red>{player}</gradient> 不幸遇到了 <red><bold>{killer}</bold></red>，故事结束"
+    - "<red>{player}</red> 被 <red><bold>{killer}</bold></red> 击败，<gold>{weapon}</gold> 上还滴着血"
 
   # ---------------- 怪物击杀（通用兜底） ----------------
   monster:
     - "<red>{player}</red> 被 <dark_red>{killer}</dark_red> 残忍地杀害了"
     - "<red>{player}</red> 外出觅食，反被 {killer} 吃掉了"
+    - "<dark_red>{player}</dark_red> 低估了 {killer} 的实力，付出了生命"
+    - "<red><bold>{player}</bold></red> 在与 {killer} 的搏斗中落败"
+    - "<gradient:red:dark_red>{player}</gradient> 被 {killer} 送去了另一个世界"
+    - "<red>{player}</red> 惹了不该惹的 {killer}，代价是生命"
+    - "<dark_red><bold>{player}</bold></dark_red> 被 {killer} 的攻击打得毫无还手之力"
+    - "<red>{player}</red> 在 {killer} 面前不堪一击"
+    - "<gradient:dark_red:red>{player}</gradient> 成为了 {killer} 的猎物"
+    - "<red><bold>{player}</bold></red> 被 {killer} 击杀，连遗言都来不及说"
 
   # ---------------- 特定怪物（可选，未配置则使用 monster） ----------------
   # key 为怪物英文类型名的小写，例如 zombie / skeleton / creeper / spider
@@ -146,21 +262,72 @@ messages:
   zombie:
     - "<green>{player}</green> 被僵尸啃食殆尽"
     - "<dark_green>{player}</dark_green> 加入了僵尸的晚宴菜单"
+    - "<gradient:green:dark_green>{player}</gradient> 被僵尸群包围，再也没出来"
+    - "<green><bold>{player}</bold></green> 被僵尸感染，然后就没有然后了"
+    - "<dark_green>{player}</dark_green> 的脑子被僵尸盯上了，据说是难得的美食"
+    - "<green>{player}</green> 想和僵尸交朋友，僵尸表示要先吃顿饭"
+    - "<gradient:dark_green:green>{player}</gradient> 被僵尸的拥抱窒息而亡"
+    - "<green><bold>{player}</bold></green> 在夜晚独行，被僵尸截了胡"
+    - "<dark_green>{player}</dark_green> 和僵尸拼了近战，输了"
+    - "<green>{player}</green> 忘记了关门，僵尸登门拜访"
 
   skeleton:
     - "<gray>{player}</gray> 被骷髅的箭矢射穿了心脏"
+    - "<gray><bold>{player}</bold></gray> 被骷髅当成了移动靶"
+    - "<gradient:gray:dark_gray>{player}</gradient> 身中数箭，倒在了骷髅面前"
+    - "<gray>{player}</gray> 被骷髅的精准射击爆了头"
+    - "<dark_gray>{player}</dark_gray> 想冲锋，骷髅表示远程优势更大"
+    - "<gray><bold>{player}</bold></gray> 被骷髅射成了刺猬"
+    - "<gradient:dark_gray:gray>{player}</gradient> 低估了骷髅的箭术"
+    - "<gray>{player}</gray> 被骷髅一箭封喉"
+    - "<dark_gray><bold>{player}</bold></dark_gray> 在骷髅的箭雨中倒下"
+    - "<gray>{player}</gray> 想躲箭，但骷髅的准头太好了"
 
   creeper:
     - "<green>{player}</green> 被苦力怕的热情问候炸飞了"
     - "<green><bold>{player}</bold></green> 和苦力怕来了个亲密接触"
+    - "<gradient:green:dark_green>{player}</gradient> 听到了嘶嘶声，然后就没有然后了"
+    - "<green>{player}</green> 被苦力怕偷袭，连反应的时间都没有"
+    - "<green><bold>{player}</bold></green> 想撸掉苦力怕，结果被撸掉了"
+    - "<gradient:dark_green:green>{player}</gradient> 和苦力怕的距离太近了"
+    - "<green>{player}</green> 忘记了看脚下，苦力怕已经贴脸了"
+    - "<green><bold>{player}</bold></green> 被苦力怕送上了天，免费的飞行体验"
+    - "<dark_green>{player}</dark_green> 听到了身后传来嘶嘶声，回头已经来不及了"
+    - "<green>{player}</green> 的最后记忆是一道绿色的闪光"
 
   spider:
     - "<dark_gray>{player}</dark_gray> 成为了蜘蛛的美餐"
+    - "<dark_gray><bold>{player}</bold></dark_gray> 被蜘蛛的毒牙刺穿了"
+    - "<gradient:dark_gray:black>{player}</gradient> 被蜘蛛网缠住，再也挣脱不开"
+    - "<dark_gray>{player}</dark_gray> 想和蜘蛛比爬墙，输了"
+    - "<gray>{player}</gray> 被蜘蛛群的红色眼睛包围了"
+    - "<dark_gray><bold>{player}</bold></dark_gray> 在黑暗中遇到了蜘蛛，再也没走出来"
+    - "<gradient:black:dark_gray>{player}</gradient> 被洞穴蜘蛛的毒液麻痹"
+    - "<dark_gray>{player}</dark_gray> 的脚下突然出现了八条腿"
+    - "<gray><bold>{player}</bold></gray> 被蜘蛛从天而降突袭"
+    - "<dark_gray>{player}</dark_gray> 成为了蛛网中的新藏品"
 
   enderman:
     - "<dark_purple>{player}</dark_purple> 惹怒了末影人，被瞬移秒杀"
+    - "<dark_purple><bold>{player}</bold></dark_purple> 盯着末影人看了太久，代价是生命"
+    - "<gradient:dark_purple:black>{player}</gradient> 被末影人追到了天涯海角"
+    - "<dark_purple>{player}</dark_purple> 和末影人对视了一眼，然后世界就黑了"
+    - "<light_purple>{player}</light_purple> 忘记了末影人的禁忌：不要看它的眼睛"
+    - "<dark_purple><bold>{player}</bold></dark_purple> 被末影人瞬移到身后一击毙命"
+    - "<gradient:purple:dark_purple>{player}</gradient> 惹了不该惹的高个子"
+    - "<dark_purple>{player}</dark_purple> 在末地惹了末影人，无处可逃"
+    - "<light_purple><bold>{player}</bold></light_purple> 被末影人的长臂揪住了命运"
+    - "<dark_purple>{player}</dark_purple> 对末影人眨了眨眼，末影人没觉得可爱"
 
   # ---------------- 兜底（任何未匹配到的情况） ----------------
   default:
     - "<red>{player}</red> 死了"
     - "<gray>{player}</gray> 永远地离开了这个世界"
+    - "<red><bold>{player}</bold></red> 的人生画上了句号"
+    - "<gray>{player}</gray> 倒下了，再也没有站起来"
+    - "<dark_gray>{player}</dark_gray> 的生命之火熄灭了"
+    - "<red>{player}</red> 在 <aqua>{world}</aqua> 中不幸陨落"
+    - "<gray><italic>{player}</italic></gray> 的冒险到此结束"
+    - "<gradient:gray:dark_gray>{player}</gradient> 消失在了时间的长河中"
+    - "<red><bold>{player}</bold></red> 的故事，到此终章"
+    - "<gray>{player}</gray> 安息吧，愿天堂没有方块"

@@ -7,6 +7,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -18,9 +19,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,6 +76,77 @@ public class DeathListener implements Listener {
             Map.entry(EntityType.IRON_GOLEM,  "铁傀儡")
     );
 
+    /** 怪物类型 → 致死方式（武器信息），未列出的怪物不显示武器 */
+    private static final Map<EntityType, String> MOB_WEAPON = Map.ofEntries(
+            Map.entry(EntityType.ZOMBIE,           "利爪"),
+            Map.entry(EntityType.ZOMBIE_VILLAGER,  "利爪"),
+            Map.entry(EntityType.HUSK,             "利爪"),
+            Map.entry(EntityType.DROWNED,          "利爪"),
+            Map.entry(EntityType.SKELETON,         "弓箭"),
+            Map.entry(EntityType.STRAY,            "弓箭"),
+            Map.entry(EntityType.WITHER_SKELETON,  "弓箭"),
+            Map.entry(EntityType.SPIDER,           "毒牙"),
+            Map.entry(EntityType.CAVE_SPIDER,      "毒牙"),
+            Map.entry(EntityType.ENDERMAN,         "长臂"),
+            Map.entry(EntityType.WITCH,            "毒药"),
+            Map.entry(EntityType.BLAZE,            "烈焰"),
+            Map.entry(EntityType.PIGLIN,           "金剑"),
+            Map.entry(EntityType.PIGLIN_BRUTE,     "金斧"),
+            Map.entry(EntityType.ZOGLIN,           "獠牙"),
+            Map.entry(EntityType.HOGLIN,           "獠牙"),
+            Map.entry(EntityType.WARDEN,           "声波"),
+            Map.entry(EntityType.IRON_GOLEM,       "铁拳"),
+            Map.entry(EntityType.SLIME,            "黏液"),
+            Map.entry(EntityType.MAGMA_CUBE,       "岩浆"),
+            Map.entry(EntityType.GHAST,            "火球"),
+            Map.entry(EntityType.PHANTOM,          "尖喙")
+    );
+
+    /** 附魔英文名 → 中文名（用于武器悬浮详情）。未列出的回退为可读英文。 */
+    private static final Map<String, String> ENCHANT_CN = Map.ofEntries(
+            Map.entry("protection",           "保护"),
+            Map.entry("fire_protection",      "火焰保护"),
+            Map.entry("feather_falling",      "摔落保护"),
+            Map.entry("blast_protection",     "爆炸保护"),
+            Map.entry("projectile_protection","弹射物保护"),
+            Map.entry("respiration",          "水下呼吸"),
+            Map.entry("aqua_affinity",        "水下速掘"),
+            Map.entry("thorns",               "荆棘"),
+            Map.entry("depth_strider",        "深海探索者"),
+            Map.entry("frost_walker",         "冰霜行者"),
+            Map.entry("soul_speed",           "灵魂疾行"),
+            Map.entry("sharpness",            "锋利"),
+            Map.entry("smite",                "亡灵杀手"),
+            Map.entry("bane_of_arthropods",   "节肢杀手"),
+            Map.entry("knockback",            "击退"),
+            Map.entry("fire_aspect",          "火焰附加"),
+            Map.entry("looting",              "抢夺"),
+            Map.entry("sweeping",             "横扫之刃"),
+            Map.entry("efficiency",           "效率"),
+            Map.entry("silk_touch",           "精准采集"),
+            Map.entry("unbreaking",           "耐久"),
+            Map.entry("fortune",              "时运"),
+            Map.entry("power",                "力量"),
+            Map.entry("punch",                "冲击"),
+            Map.entry("flame",                "火矢"),
+            Map.entry("infinity",             "无限"),
+            Map.entry("luck_of_the_sea",      "海之眷顾"),
+            Map.entry("lure",                 "诱饵"),
+            Map.entry("loyalty",              "忠诚"),
+            Map.entry("impaling",             "穿刺"),
+            Map.entry("riptide",              "激流"),
+            Map.entry("channeling",           "引雷"),
+            Map.entry("multishot",            "多重射击"),
+            Map.entry("quick_charge",         "快速装填"),
+            Map.entry("piercing",             "穿透"),
+            Map.entry("mending",              "经验修补"),
+            Map.entry("density",              "密度"),
+            Map.entry("breach",               "破甲"),
+            Map.entry("wind_burst",           "风爆"),
+            Map.entry("curse_of_vanishing",   "消失诅咒"),
+            Map.entry("curse_of_binding",     "绑定诅咒")
+    );
+
     public DeathListener(CustomDeathMessages plugin) {
         this.plugin = plugin;
     }
@@ -98,7 +176,7 @@ public class DeathListener implements Listener {
 
         // 格式化并广播
         Component message = plugin.getMessageFormatter().format(
-                template, player.getName(), info.killerName(), info.weapon(),
+                template, player.getName(), info.killerName(), info.weapon(), info.weaponDetail(),
                 info.damage(), player.getWorld().getName());
 
         event.deathMessage(null);
@@ -150,13 +228,13 @@ public class DeathListener implements Listener {
             // 其他实体（如 TNT）
             String typeKey = damager.getType().name().toLowerCase();
             String category = plugin.getConfigManager().hasCategory(typeKey) ? typeKey : "monster";
-            return new DeathInfo(category, null, null, damage);
+            return new DeathInfo(category, null, null, null, damage);
         }
 
         // 环境伤害
         EntityDamageEvent.DamageCause cause = lastDamage == null ? null : lastDamage.getCause();
         String category = cause == null ? "default" : CAUSE_CATEGORIES.getOrDefault(cause, "default");
-        return new DeathInfo(category, null, null, damage);
+        return new DeathInfo(category, null, null, null, damage);
     }
 
     /**
@@ -164,15 +242,18 @@ public class DeathListener implements Listener {
      */
     private DeathInfo pvpInfo(Player killer, Entity projectile, double damage) {
         String weapon = "拳头";
+        String weaponDetail = null;
         if (projectile != null) {
             weapon = projectileName(projectile);
+            weaponDetail = "<gray>远程攻击</gray><newline><gray>类型: " + weapon + "</gray>";
         } else {
             ItemStack item = killer.getInventory().getItemInMainHand();
             if (item != null && !item.getType().isAir()) {
                 weapon = itemName(item);
+                weaponDetail = buildItemDetail(item);
             }
         }
-        return new DeathInfo("pvp", killer.getName(), weapon, damage);
+        return new DeathInfo("pvp", killer.getName(), weapon, weaponDetail, damage);
     }
 
     /**
@@ -192,10 +273,73 @@ public class DeathListener implements Listener {
             category = "monster";
         }
 
-        return new DeathInfo(category, attacker.getName(), null, damage);
+        String weapon = MOB_WEAPON.get(attacker.getType());
+        String weaponDetail = null;
+        if (weapon != null) {
+            String mob = cnName != null ? cnName : attacker.getType().name().toLowerCase();
+            weaponDetail = "<gray>致死方式</gray><newline><gray>攻击者: " + mob
+                    + "</gray><newline><gray>方式: " + weapon + "</gray>";
+        }
+        return new DeathInfo(category, attacker.getName(), weapon, weaponDetail, damage);
     }
 
     // ==================== 工具方法 ====================
+
+    /**
+     * 构造武器物品的悬浮详情（MiniMessage 片段）：附魔列表 + 耐久。
+     */
+    private String buildItemDetail(ItemStack item) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<gray>武器详情</gray>");
+        Map<Enchantment, Integer> enchants = item.getEnchantments();
+        if (enchants != null && !enchants.isEmpty()) {
+            List<String> parts = new ArrayList<>();
+            for (Map.Entry<Enchantment, Integer> e : enchants.entrySet()) {
+                NamespacedKey key = e.getKey().getKey();
+                String name = ENCHANT_CN.getOrDefault(key.getKey(), prettify(key.getKey()));
+                parts.add(name + " " + toRoman(e.getValue()));
+            }
+            sb.append("<newline><yellow>附魔: ").append(String.join(", ", parts)).append("</yellow>");
+        }
+        int max = item.getType().getMaxDurability();
+        if (max > 0) {
+            ItemMeta meta = item.getItemMeta();
+            int used = (meta instanceof Damageable d) ? d.getDamage() : 0;
+            int dur = max - used;
+            sb.append("<newline><red>耐久: ").append(dur).append("/").append(max).append("</red>");
+        }
+        return sb.toString();
+    }
+
+    /** 罗马数字（附魔等级显示用）。超过 3999 回退为阿拉伯数字。 */
+    private static String toRoman(int value) {
+        if (value <= 0 || value > 3999) {
+            return String.valueOf(value);
+        }
+        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] symbols = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            while (value >= values[i]) {
+                sb.append(symbols[i]);
+                value -= values[i];
+            }
+        }
+        return sb.toString();
+    }
+
+    /** 把 "fire_protection" 这类 key 转成 "Fire Protection" 可读形式。 */
+    private static String prettify(String key) {
+        if (key == null || key.isEmpty()) {
+            return key;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String word : key.split("_")) {
+            if (word.isEmpty()) continue;
+            sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+        }
+        return sb.toString().trim();
+    }
 
     private String itemName(ItemStack item) {
         try {
@@ -259,7 +403,6 @@ public class DeathListener implements Listener {
 
         Sound sound = cfg.getDeathSound();
         if (sound == null) {
-            // 配置的音效名无效，跳过播放
             return;
         }
 
@@ -267,19 +410,23 @@ public class DeathListener implements Listener {
         float pitch = cfg.getDeathSoundPitch();
 
         switch (cfg.getDeathSoundTarget()) {
-            case "victim" -> player.playSound(player.getLocation(), sound, volume, pitch);
-            case "nearby" -> player.getWorld().playSound(player.getLocation(), sound, volume, pitch);
-            default -> Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), sound, volume, pitch));
+            case "victim" ->
+                    player.playSound(player.getLocation(), sound, SoundCategory.PLAYERS, volume, pitch);
+            case "nearby" ->
+                    player.getWorld().playSound(player.getLocation(), sound, SoundCategory.PLAYERS, volume, pitch);
+            default ->
+                    Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), sound, SoundCategory.PLAYERS, volume, pitch));
         }
     }
 
     /**
      * 死亡信息记录。
      *
-     * @param category   死亡分类 key
-     * @param killerName 击杀者名（无击杀者时为 null）
-     * @param weapon     武器名（无武器时为 null）
-     * @param damage     最终伤害值
+     * @param category     死亡分类 key
+     * @param killerName   击杀者名（无击杀者时为 null）
+     * @param weapon       武器显示名（无武器时为 null）
+     * @param weaponDetail 武器悬浮详情（MiniMessage 片段，可为 null）
+     * @param damage       最终伤害值
      */
-    private record DeathInfo(String category, String killerName, String weapon, double damage) {}
+    private record DeathInfo(String category, String killerName, String weapon, String weaponDetail, double damage) {}
 }
