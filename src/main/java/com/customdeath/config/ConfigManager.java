@@ -149,18 +149,6 @@ public class ConfigManager {
         return config.getBoolean("settings.killer-feedback.enabled", true);
     }
 
-    public boolean isRevengeEnabled() {
-        return config.getBoolean("settings.revenge.enabled", true);
-    }
-
-    /**
-     * @return 复仇提示模板（含 {player} {killer} {count} 占位符）
-     */
-    public String getRevengeMessage() {
-        return config.getString("settings.revenge.message",
-                " <gray>这是 {killer} 第 <red>{count}</red> 次击杀 {player}</gray>");
-    }
-
     public boolean isKillStreakEnabled() {
         return config.getBoolean("settings.kill-streak.enabled", true);
     }
@@ -171,6 +159,44 @@ public class ConfigManager {
     public String getKillStreakMessage() {
         return config.getString("settings.kill-streak.message",
                 " <gold>{killer} <bold><aqua>{title}</aqua></bold>！</gold>");
+    }
+
+    /**
+     * 是否将连杀称号额外以 Minecraft 标题（屏幕中央大字）展示给广播范围内玩家。
+     */
+    public boolean isKillStreakTitleEnabled() {
+        return config.getBoolean("settings.kill-streak.show-title", true);
+    }
+
+    /**
+     * 连杀标题的主标题（屏幕中央大字）模板，可用占位符：{player} {killer} {streak} {title}。
+     */
+    public String getKillStreakTitleMain() {
+        return config.getString("settings.kill-streak.title-main",
+                "<gold><bold>{title}</bold></gold>");
+    }
+
+    /**
+     * 连杀标题的副标题（主标题下方小字）模板，可用占位符：{player} {killer} {streak} {title}。
+     */
+    public String getKillStreakTitleSub() {
+        return config.getString("settings.kill-streak.title-sub",
+                "<red>{killer}</red> <gray>达成 {streak} 连杀</gray>");
+    }
+
+    /** 连杀标题淡入时长（刻，20 刻 = 1 秒）。 */
+    public int getKillStreakTitleFadeIn() {
+        return config.getInt("settings.kill-streak.title-fade-in", 10);
+    }
+
+    /** 连杀标题停留时长（刻，20 刻 = 1 秒）。 */
+    public int getKillStreakTitleStay() {
+        return config.getInt("settings.kill-streak.title-fade-stay", 70);
+    }
+
+    /** 连杀标题淡出时长（刻，20 刻 = 1 秒）。 */
+    public int getKillStreakTitleFadeOut() {
+        return config.getInt("settings.kill-streak.title-fade-out", 20);
     }
 
     /**

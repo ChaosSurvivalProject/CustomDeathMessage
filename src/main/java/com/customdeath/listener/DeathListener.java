@@ -3,6 +3,7 @@ package com.customdeath.listener;
 import com.customdeath.CustomDeathMessages;
 import com.customdeath.config.ConfigManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -26,6 +27,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,10 +44,7 @@ public class DeathListener implements Listener {
 
     private final CustomDeathMessages plugin;
 
-    /** 击杀关系统计：击杀者 UUID → (死者 UUID → 累计击杀次数)。内存统计，重启清零。 */
-    private final Map<UUID, Map<UUID, Integer>> killsByKiller = new HashMap<>();
-
-    /** 连杀统计：击杀者 UUID → 当前连杀数。被击杀（死亡）时清零。 */
+    /** 连杀统计：击杀者 UUID → 当前连杀数。被击杀（死亡）时清零。内存统计，重启清零。 */
     private final Map<UUID, Integer> killStreaks = new HashMap<>();
 
     /** 首杀标记：服务器启动后的第一起玩家死亡为 true，触发后置 false。 */
@@ -186,17 +185,14 @@ public class DeathListener implements Listener {
             firstBlood = true;
         }
 
-        // 统计击杀关系与连杀（仅 PVP 且击杀者在线）
+        // 统计连杀数（仅 PVP 且击杀者在线；内存统计，重启清零）
         boolean pvp = "pvp".equals(info.category());
-        int revengeCount = 0;
         int streak = 0;
         UUID killerUuid = null;
         if (pvp && info.killerName() != null) {
             Player killer = Bukkit.getPlayerExact(info.killerName());
             if (killer != null) {
                 killerUuid = killer.getUniqueId();
-                revengeCount = killsByKiller.computeIfAbsent(killerUuid, k -> new HashMap<>())
-                        .merge(player.getUniqueId(), 1, Integer::sum);
                 streak = killStreaks.merge(killerUuid, 1, Integer::sum);
             }
         }
@@ -214,32 +210,36 @@ public class DeathListener implements Listener {
                 template, player.getName(), info.killerName(), info.weapon(), info.weaponDetail(),
                 info.damage(), player.getWorld().getName());
 
-        // 复仇提示 / 连杀播报：在广播消息末尾追加互动文本（仅 PVP）
-        if (pvp && killerUuid != null) {
-            var formatter = plugin.getMessageFormatter();
-            if (cfg.isRevengeEnabled() && revengeCount >= 2) {
-                message = message.append(formatter.formatExtra(
-                        cfg.getRevengeMessage(), player.getName(), info.killerName(),
-                        revengeCount, streak, null));
-            }
-            if (cfg.isKillStreakEnabled() && streak >= 2) {
-                message = message.append(formatter.formatExtra(
-                        cfg.getKillStreakMessage(), player.getName(), info.killerName(),
-                        revengeCount, streak, cfg.getKillStreakTitle(streak)));
+        // 连杀称号（如"三连决胜"）以 Minecraft 标题（屏幕中央大字）展示给广播范围内玩家（仅 PVP）
+        if (pvp && killerUuid != null && cfg.isKillStreakEnabled() && streak >= 2) {
+            String killStreakTitle = cfg.getKillStreakTitle(streak);
+            if (killStreakTitle != null && cfg.isKillStreakTitleEnabled()) {
+                var formatter = plugin.getMessageFormatter();
+                Component main = formatter.formatExtra(cfg.getKillStreakTitleMain(),
+                        player.getName(), info.killerName(), 0, streak, killStreakTitle);
+                Component sub = formatter.formatExtra(cfg.getKillStreakTitleSub(),
+                        player.getName(), info.killerName(), 0, streak, killStreakTitle);
+                Title title = Title.title(main, sub, Title.Times.times(
+                        Duration.ofMillis(cfg.getKillStreakTitleFadeIn() * 50L),
+                        Duration.ofMillis(cfg.getKillStreakTitleStay() * 50L),
+                        Duration.ofMillis(cfg.getKillStreakTitleFadeOut() * 50L)));
+                for (Player p : getBroadcastRecipients(player)) {
+                    p.showTitle(title);
+                }
             }
         }
 
         event.deathMessage(null);
         broadcast(player, message);
 
-        // 击杀者专属反馈（私聊击杀者，仅 PVP）
+        // 击杀者专属反馈：通过 actionbar 仅向击杀者本人展示（仅 PVP，不进入聊天栏）
         if (pvp && killerUuid != null && cfg.isKillerFeedbackEnabled()
                 && cfg.hasCategory("killer-feedback")) {
             Player killer = Bukkit.getPlayer(killerUuid);
             if (killer != null) {
                 String feedback = cfg.pickTemplate("killer-feedback");
                 if (feedback != null) {
-                    killer.sendMessage(plugin.getMessageFormatter().format(
+                    killer.sendActionBar(plugin.getMessageFormatter().format(
                             feedback, player.getName(), info.killerName(), info.weapon(), null,
                             info.damage(), player.getWorld().getName()));
                 }
@@ -429,24 +429,38 @@ public class DeathListener implements Listener {
     }
 
     /**
-     * 按配置的广播模式发送消息。
+     * 按配置的广播模式发送聊天消息。
      */
     private void broadcast(Player player, Component message) {
-        switch (plugin.getConfigManager().getBroadcastMode()) {
-            case "world" -> player.getWorld().getPlayers().forEach(p -> p.sendMessage(message));
+        getBroadcastRecipients(player).forEach(p -> p.sendMessage(message));
+    }
+
+    /**
+     * 按配置的广播模式获取接收玩家列表。
+     * <p>
+     * 聊天播报与 actionbar 广播共用同一套范围规则，避免在多处重复判定逻辑。
+     *
+     * @param player 死亡玩家（用于确定所在世界与位置）
+     * @return 应接收消息的玩家列表（含死亡玩家本人）
+     */
+    private List<Player> getBroadcastRecipients(Player player) {
+        ConfigManager cfg = plugin.getConfigManager();
+        return switch (cfg.getBroadcastMode()) {
+            case "world" -> new ArrayList<>(player.getWorld().getPlayers());
             case "nearby" -> {
                 Location loc = player.getLocation();
-                double radius = plugin.getConfigManager().getNearbyRadius();
-                double radiusSquared = radius * radius;
+                double radiusSquared = cfg.getNearbyRadius() * cfg.getNearbyRadius();
+                List<Player> list = new ArrayList<>();
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (p.getWorld().equals(player.getWorld())
                             && p.getLocation().distanceSquared(loc) <= radiusSquared) {
-                        p.sendMessage(message);
+                        list.add(p);
                     }
                 }
+                yield list;
             }
-            default -> Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(message));
-        }
+            default -> new ArrayList<>(Bukkit.getOnlinePlayers());
+        };
     }
 
     /**

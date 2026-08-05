@@ -77,20 +77,13 @@ settings:
 
   # ============ 击杀者互动 ============
 
-  # 击杀者专属反馈：PVP 击杀时，击杀者私下收到一条确认消息
+  # 击杀者专属反馈：PVP 击杀时，通过 actionbar 向击杀者本人展示一条确认消息
   # （对应 messages.killer-feedback 文案池，未配置该分类则不发送）
   killer-feedback:
     # 是否开启击杀者反馈
     enabled: true
 
-  # 复仇提示：同一击杀者多次击杀同一玩家时，在死亡播报末尾追加提示
-  revenge:
-    # 是否开启复仇提示
-    enabled: true
-    # 消息模板，可用占位符：{player} {killer} {count}（count=累计击杀次数）
-    message: " <gray>这是 {killer} 第 <red>{count}</red> 次击杀 {player}</gray>"
-
-  # 连杀播报：击杀者连续击杀达到 2 次及以上时，在死亡播报末尾追加提示
+  # 连杀称号：击杀者连续击杀达到 2 次及以上时，以 Minecraft 标题（屏幕中央大字）展示称号（广播范围内玩家可见）
   kill-streak:
     # 是否开启连杀播报
     enabled: true
@@ -103,6 +96,16 @@ settings:
       "5": "五连绝世"
     # 播报模板，可用占位符：{player} {killer} {streak} {title}
     message: " <gold>{killer} <bold><aqua>{title}</aqua></bold>！</gold>"
+    # 是否将连杀称号额外以 Minecraft 标题（屏幕中央大字）展示给广播范围内玩家
+    show-title: true
+    # 主标题（中央大字）模板，可用占位符：{player} {killer} {streak} {title}
+    title-main: "<gold><bold>{title}</bold></gold>"
+    # 副标题（主标题下方小字）模板，可用占位符：{player} {killer} {streak} {title}
+    title-sub: "<red>{killer}</red> <gray>达成 {streak} 连杀</gray>"
+    # 标题时长（单位：刻，20 刻 = 1 秒）
+    title-fade-in: 10
+    title-fade-stay: 70
+    title-fade-out: 20
 
   # 首杀文案：服务器启动后的第一次玩家死亡使用专属文案
   # （对应 messages.first-blood 文案池，未配置该分类则回退正常分类）
