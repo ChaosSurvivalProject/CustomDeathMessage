@@ -75,6 +75,41 @@ settings:
     #   everyone - 全服所有在线玩家听到
     target: everyone
 
+  # ============ 击杀者互动 ============
+
+  # 击杀者专属反馈：PVP 击杀时，击杀者私下收到一条确认消息
+  # （对应 messages.killer-feedback 文案池，未配置该分类则不发送）
+  killer-feedback:
+    # 是否开启击杀者反馈
+    enabled: true
+
+  # 复仇提示：同一击杀者多次击杀同一玩家时，在死亡播报末尾追加提示
+  revenge:
+    # 是否开启复仇提示
+    enabled: true
+    # 消息模板，可用占位符：{player} {killer} {count}（count=累计击杀次数）
+    message: " <gray>这是 {killer} 第 <red>{count}</red> 次击杀 {player}</gray>"
+
+  # 连杀播报：击杀者连续击杀达到 2 次及以上时，在死亡播报末尾追加提示
+  kill-streak:
+    # 是否开启连杀播报
+    enabled: true
+    # 各连杀等级的称号（参考 MOBA 游戏播报风格）。
+    # key 为连杀数，超过最高档的连杀沿用最高档称号（如 6 连杀仍显示"五连绝世"）。
+    titles:
+      "2": "二连击破"
+      "3": "三连决胜"
+      "4": "四连超凡"
+      "5": "五连绝世"
+    # 播报模板，可用占位符：{player} {killer} {streak} {title}
+    message: " <gold>{killer} <bold><aqua>{title}</aqua></bold>！</gold>"
+
+  # 首杀文案：服务器启动后的第一次玩家死亡使用专属文案
+  # （对应 messages.first-blood 文案池，未配置该分类则回退正常分类）
+  first-blood:
+    # 是否启用首杀文案（每次服务器重启后触发一次）
+    enabled: true
+
 
 # ============================================================
 #  死亡消息模板
@@ -331,3 +366,16 @@ messages:
     - "<gradient:gray:dark_gray>{player}</gradient> 消失在了时间的长河中"
     - "<red><bold>{player}</bold></red> 的故事，到此终章"
     - "<gray>{player}</gray> 安息吧，愿天堂没有方块"
+
+  # ---------------- 击杀者反馈（私聊击杀者，仅 PVP 触发） ----------------
+  killer-feedback:
+    - "<green><bold>✔</bold> 你击杀了 <yellow>{player}</yellow>！</green>"
+    - "<green>你终结了 <yellow>{player}</yellow> 的冒险</green>"
+    - "<aqua>干得漂亮，<yellow>{player}</yellow> 倒在了你的手下</aqua>"
+    - "<green>干净利落，<yellow>{player}</yellow> 根本不是你的对手</green>"
+
+  # ---------------- 首杀（每次服务器启动后的第一次玩家死亡） ----------------
+  first-blood:
+    - "<gold><bold>【首杀】</bold></gold> <red>{player}</red> 成为了本服第一个倒下的人"
+    - "<gradient:gold:red><bold>首杀！</bold></gradient> <red>{player}</red> 首当其冲地倒下了"
+    - "<yellow><bold>第一滴血！</bold></yellow> <red>{player}</red> 贡献了本服的第一次死亡"

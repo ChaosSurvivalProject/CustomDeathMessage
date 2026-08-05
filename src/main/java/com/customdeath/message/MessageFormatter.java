@@ -89,6 +89,48 @@ public class MessageFormatter {
     }
 
     /**
+     * 格式化附加片段（复仇提示 / 连杀播报等互动文本）。
+     * <p>
+     * 与 {@link #format} 不同，仅支持 {player} {killer} {count} {streak} {title}
+     * 五个占位符，用于在死亡播报消息末尾追加一小段文本。
+     *
+     * @param template   附加消息模板
+     * @param playerName 死亡玩家名
+     * @param killerName 击杀者名（可为 null 或空）
+     * @param count      击杀者对死亡玩家的累计击杀次数
+     * @param streak     击杀者当前连杀数
+     * @param title      连杀等级称号（如"五连绝世"，可为 null）
+     * @return 解析后的 Adventure Component
+     */
+    public Component formatExtra(String template, String playerName, String killerName,
+                                 int count, int streak, String title) {
+        if (template == null || template.isBlank()) {
+            return Component.empty();
+        }
+        String text = template;
+
+        // 替换玩家名与击杀者名（与主消息使用相同的颜色配置）
+        if (text.contains("{player}")) {
+            text = text.replace("{player}", colorize(playerName, configManager.getPlayerNameColor()));
+        }
+        if (killerName != null && !killerName.isEmpty() && text.contains("{killer}")) {
+            text = text.replace("{killer}", colorize(killerName, configManager.getKillerNameColor()));
+        }
+        text = text.replace("{count}", String.valueOf(count))
+                   .replace("{streak}", String.valueOf(streak));
+        if (title != null && !title.isEmpty() && text.contains("{title}")) {
+            text = text.replace("{title}", title);
+        }
+
+        try {
+            return miniMessage.deserialize(text);
+        } catch (Exception e) {
+            // MiniMessage 解析失败时降级为纯文本
+            return Component.text(text);
+        }
+    }
+
+    /**
      * 将 MiniMessage 颜色标签包裹在名称外层。
      * 例如：colorTag="<yellow>", name="Steve" → "<yellow>Steve</yellow>"
      */

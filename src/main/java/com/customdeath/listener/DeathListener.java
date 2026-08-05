@@ -27,8 +27,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 玩家死亡事件监听器。
@@ -39,6 +41,15 @@ import java.util.Map;
 public class DeathListener implements Listener {
 
     private final CustomDeathMessages plugin;
+
+    /** 击杀关系统计：击杀者 UUID → (死者 UUID → 累计击杀次数)。内存统计，重启清零。 */
+    private final Map<UUID, Map<UUID, Integer>> killsByKiller = new HashMap<>();
+
+    /** 连杀统计：击杀者 UUID → 当前连杀数。被击杀（死亡）时清零。 */
+    private final Map<UUID, Integer> killStreaks = new HashMap<>();
+
+    /** 首杀标记：服务器启动后的第一起玩家死亡为 true，触发后置 false。 */
+    private boolean firstBloodPending = true;
 
     /** 伤害原因 → 死亡分类 */
     private static final Map<EntityDamageEvent.DamageCause, String> CAUSE_CATEGORIES = Map.ofEntries(
@@ -168,8 +179,32 @@ public class DeathListener implements Listener {
                     + " 原始原因=" + (lastDamage == null ? "UNKNOWN" : lastDamage.getCause().name()));
         }
 
-        // 选取消息模板
-        String template = cfg.pickTemplate(info.category());
+        // 首杀：服务器启动后的第一起玩家死亡使用专属文案（一次性）
+        boolean firstBlood = false;
+        if (cfg.isFirstBloodEnabled() && firstBloodPending && cfg.hasCategory("first-blood")) {
+            firstBloodPending = false;
+            firstBlood = true;
+        }
+
+        // 统计击杀关系与连杀（仅 PVP 且击杀者在线）
+        boolean pvp = "pvp".equals(info.category());
+        int revengeCount = 0;
+        int streak = 0;
+        UUID killerUuid = null;
+        if (pvp && info.killerName() != null) {
+            Player killer = Bukkit.getPlayerExact(info.killerName());
+            if (killer != null) {
+                killerUuid = killer.getUniqueId();
+                revengeCount = killsByKiller.computeIfAbsent(killerUuid, k -> new HashMap<>())
+                        .merge(player.getUniqueId(), 1, Integer::sum);
+                streak = killStreaks.merge(killerUuid, 1, Integer::sum);
+            }
+        }
+        // 死亡打断死者自己的连杀
+        killStreaks.remove(player.getUniqueId());
+
+        // 选取消息模板（首杀优先，未配置首杀分类时回退正常分类）
+        String template = firstBlood ? cfg.pickTemplate("first-blood") : cfg.pickTemplate(info.category());
         if (template == null) {
             return;
         }
@@ -179,8 +214,37 @@ public class DeathListener implements Listener {
                 template, player.getName(), info.killerName(), info.weapon(), info.weaponDetail(),
                 info.damage(), player.getWorld().getName());
 
+        // 复仇提示 / 连杀播报：在广播消息末尾追加互动文本（仅 PVP）
+        if (pvp && killerUuid != null) {
+            var formatter = plugin.getMessageFormatter();
+            if (cfg.isRevengeEnabled() && revengeCount >= 2) {
+                message = message.append(formatter.formatExtra(
+                        cfg.getRevengeMessage(), player.getName(), info.killerName(),
+                        revengeCount, streak, null));
+            }
+            if (cfg.isKillStreakEnabled() && streak >= 2) {
+                message = message.append(formatter.formatExtra(
+                        cfg.getKillStreakMessage(), player.getName(), info.killerName(),
+                        revengeCount, streak, cfg.getKillStreakTitle(streak)));
+            }
+        }
+
         event.deathMessage(null);
         broadcast(player, message);
+
+        // 击杀者专属反馈（私聊击杀者，仅 PVP）
+        if (pvp && killerUuid != null && cfg.isKillerFeedbackEnabled()
+                && cfg.hasCategory("killer-feedback")) {
+            Player killer = Bukkit.getPlayer(killerUuid);
+            if (killer != null) {
+                String feedback = cfg.pickTemplate("killer-feedback");
+                if (feedback != null) {
+                    killer.sendMessage(plugin.getMessageFormatter().format(
+                            feedback, player.getName(), info.killerName(), info.weapon(), null,
+                            info.damage(), player.getWorld().getName()));
+                }
+            }
+        }
 
         // 将死亡消息打印到控制台日志（纯文本）
         if (cfg.isConsoleLogDeath()) {

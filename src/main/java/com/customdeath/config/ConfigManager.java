@@ -143,6 +143,88 @@ public class ConfigManager {
         return config.getString("settings.death-sound.target", "everyone").toLowerCase();
     }
 
+    // ============ 击杀者互动 ============
+
+    public boolean isKillerFeedbackEnabled() {
+        return config.getBoolean("settings.killer-feedback.enabled", true);
+    }
+
+    public boolean isRevengeEnabled() {
+        return config.getBoolean("settings.revenge.enabled", true);
+    }
+
+    /**
+     * @return 复仇提示模板（含 {player} {killer} {count} 占位符）
+     */
+    public String getRevengeMessage() {
+        return config.getString("settings.revenge.message",
+                " <gray>这是 {killer} 第 <red>{count}</red> 次击杀 {player}</gray>");
+    }
+
+    public boolean isKillStreakEnabled() {
+        return config.getBoolean("settings.kill-streak.enabled", true);
+    }
+
+    /**
+     * @return 连杀播报模板（含 {player} {killer} {streak} {title} 占位符）
+     */
+    public String getKillStreakMessage() {
+        return config.getString("settings.kill-streak.message",
+                " <gold>{killer} <bold><aqua>{title}</aqua></bold>！</gold>");
+    }
+
+    /**
+     * 获取连杀等级称号表（连杀数 → 称号）。
+     *
+     * @return 连杀数到称号的映射，未配置时返回空 Map
+     */
+    public Map<Integer, String> getKillStreakTitles() {
+        ConfigurationSection section = config.getConfigurationSection("settings.kill-streak.titles");
+        if (section == null) {
+            return Collections.emptyMap();
+        }
+        Map<Integer, String> titles = new LinkedHashMap<>();
+        for (String key : section.getKeys(false)) {
+            try {
+                titles.put(Integer.parseInt(key), section.getString(key));
+            } catch (NumberFormatException ignored) {
+                // 忽略非数字的 key
+            }
+        }
+        return titles;
+    }
+
+    /**
+     * 获取指定连杀数对应的称号。
+     * <p>
+     * 精确匹配该连杀数；未命中时取不超过该连杀数的最高档称号
+     * （如 6 连杀未单独配置时沿用 5 连杀的称号）。
+     *
+     * @param streak 当前连杀数
+     * @return 称号文本，未配置任何称号时返回 null
+     */
+    public String getKillStreakTitle(int streak) {
+        Map<Integer, String> titles = getKillStreakTitles();
+        if (titles.isEmpty()) {
+            return null;
+        }
+        String title = titles.get(streak);
+        if (title != null) {
+            return title;
+        }
+        int best = -1;
+        for (int level : titles.keySet()) {
+            if (level <= streak && level > best) {
+                best = level;
+            }
+        }
+        return best < 0 ? null : titles.get(best);
+    }
+
+    public boolean isFirstBloodEnabled() {
+        return config.getBoolean("settings.first-blood.enabled", true);
+    }
+
     // ============ 消息模板 ============
 
     public boolean hasCategory(String category) {
