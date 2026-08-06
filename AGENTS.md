@@ -44,6 +44,7 @@ src/main/java/com/customdeath/
 ├── listener/DeathTicketListener.java # 死亡保护券监听：携带券免掉落并消耗（优先级 HIGH）
 ├── listener/ScrollListener.java # 卷轴使用监听：回城/回溯卷轴右键传送并消耗
 ├── message/MessageFormatter.java # MiniMessage 格式化与占位符替换
+├── recipe/RecipeManager.java   # 合成配方注册（回城/回溯卷轴、死亡保护券，无序合成）
 └── command/ReloadCommand.java # /customdeath 命令（reload / version / ticket / scroll）
 src/main/resources/
 ├── plugin.yml                 # 插件元数据、命令、权限（api-version: '1.20'）
@@ -123,6 +124,7 @@ PlayerDeathEvent (HIGHEST)
   - 死亡保护券：`DeathTicketListener`（HIGH 优先级）检测背包（含装备/副手），命中 `setKeepInventory(true)`（可选保留经验）并消耗一张。
   - 卷轴：`ScrollListener` 监听右键（`PlayerInteractEvent`），`setCancelled(true)` 后传送并消耗主手一张；回城卷轴传送到 `getBedSpawnLocation()`（无床不消耗），回溯卷轴传送到 `DeathPointManager` 记录的最近死亡点（无记录不消耗；死亡点向上 6 格内无可站立位置时提示不可达不消耗）。
 - **死亡点记录**：`DeathListener` 每次死亡时调用 `DeathPointManager.recordDeath`（不受 `settings.enabled` 开关影响），数据持久化到 `plugins/CustomDeathMessages/data/death-points.yml`（重启不丢）。
+- **合成配方**：`RecipeManager` 在插件启动时注册 3 个无序配方（产物均为带 PDC 标识的标准物品，可在合成台/配方书使用），成本梯度：回城卷轴 = 纸 ×2 + 任意颜色床 + 末影珍珠；回溯卷轴 = 纸 ×2 + 末影珍珠 ×2 + 回响碎片；死亡保护券 = 纸 ×2 + 金锭 ×2 + 下界之星。总开关 `settings.recipes.enabled`（默认 true；关闭后需重启服务器移除已注册配方）。产物数量若后续调整，注意 ShapelessRecipe 产物为 `buildXxx(1)`。
 - 事件优先级 `EventPriority.HIGHEST`；音效 `SoundCategory.PLAYERS`；广播按 `distanceSquared` 比较（nearby 模式）。
 - 环境原因分类表 `CAUSE_CATEGORIES` 中，`FALLING_BLOCK→fall_block`、`DRAGON_BREATH/THORNS→magic` 等合并映射，改动前先确认现有归类。
 

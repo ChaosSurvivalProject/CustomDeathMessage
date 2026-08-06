@@ -76,6 +76,13 @@ public class ConfigManager {
     }
 
     /**
+     * @return 是否注册合成配方（回城/回溯卷轴、死亡保护券）
+     */
+    public boolean isRecipesEnabled() {
+        return config.getBoolean("settings.recipes.enabled", true);
+    }
+
+    /**
      * @return 广播模式：global / world / nearby
      */
     public String getBroadcastMode() {

@@ -63,3 +63,4 @@
 - （历史完成项按此记录，例如：`[x] 初版 1.0.0 —— 死亡分类播报 / 随机·轮询选文 / 广播范围 / 死亡音效 / 武器 hover 详情`）
 - [x] **死亡保护券** —— 背包携带保护券时死亡免掉落（可选保留经验），消耗一张。PDC 标识防伪造；`/customdeath ticket <玩家> [数量]` 发放（权限 `customdeath.ticket`）。配置：`settings.death-ticket`。
 - [x] **回城 / 回溯卷轴** —— 右键使用：回城卷轴传送到床位置（无床不可用）、回溯卷轴传送到最近死亡点（无记录不可用）。死亡点记录持久化到 `data/death-points.yml`（重启不丢）。`/customdeath scroll <town|recall> <玩家> [数量]` 发放（权限 `customdeath.scroll`）。配置：`settings.scrolls`。
+- [x] **合成配方** —— 三种物品均有无序合成配方，成本梯度：回城卷轴 = 纸×2+任意床+末影珍珠；回溯卷轴 = 纸×2+末影珍珠×2+回响碎片；死亡保护券 = 纸×2+金锭×2+下界之星，产物带 PDC 标识。总开关 `settings.recipes.enabled`。`RecipeManager` 启动时注册。
