@@ -18,3 +18,9 @@ permissions:
   customdeath.reload:
     description: 允许重载插件配置
     default: op
+  customdeath.ticket:
+    description: 允许发放死亡保护券
+    default: op
+  customdeath.scroll:
+    description: 允许发放回城/回溯卷轴
+    default: op

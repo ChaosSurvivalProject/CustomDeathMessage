@@ -1,9 +1,16 @@
 package com.customdeath.config;
 
 import com.customdeath.CustomDeathMessages;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -249,6 +256,183 @@ public class ConfigManager {
 
     public boolean isFirstBloodEnabled() {
         return config.getBoolean("settings.first-blood.enabled", true);
+    }
+
+    // ============ 死亡保护券 ============
+
+    /** 保护券在物品 PDC 中的标识 key（用于识别券物品，防重命名误判）。 */
+    public static final NamespacedKey DEATH_TICKET_KEY = new NamespacedKey("customdeath", "death-ticket");
+
+    public boolean isDeathTicketEnabled() {
+        return config.getBoolean("settings.death-ticket.enabled", true);
+    }
+
+    /**
+     * 解析保护券物品材质（Material 枚举名）。
+     *
+     * @return 材质，配置无效或为空时回退为 PAPER
+     */
+    public Material getDeathTicketMaterial() {
+        return parseMaterial("settings.death-ticket.material", Material.PAPER);
+    }
+
+    /**
+     * @return 保护券显示名（MiniMessage 标签），可为 null
+     */
+    public String getDeathTicketName() {
+        return config.getString("settings.death-ticket.name", "<yellow><bold>死亡保护券</bold></yellow>");
+    }
+
+    /**
+     * @return 保护券描述（每行为一条 MiniMessage），可为空列表
+     */
+    public List<String> getDeathTicketLore() {
+        return config.getStringList("settings.death-ticket.lore");
+    }
+
+    /**
+     * @return 触发保护时是否同时保留经验等级
+     */
+    public boolean isDeathTicketKeepLevel() {
+        return config.getBoolean("settings.death-ticket.keep-level", true);
+    }
+
+    /**
+     * @return 触发保护时给玩家的提示消息（MiniMessage），可为 null
+     */
+    public String getDeathTicketMessage() {
+        return config.getString("settings.death-ticket.message",
+                "<green><bold>✔</bold> 死亡保护券生效，你免于死亡掉落</green>");
+    }
+
+    /**
+     * 构造一张（或多张）死亡保护券物品。
+     * <p>
+     * 券物品带名称、描述与 PDC 标识（{@link #DEATH_TICKET_KEY}），
+     * 供 {@code /customdeath ticket} 命令发放使用。
+     *
+     * @param amount 数量（至少 1）
+     * @return 保护券 ItemStack
+     */
+    public ItemStack buildDeathTicket(int amount) {
+        ItemStack item = new ItemStack(getDeathTicketMaterial(), Math.max(1, amount));
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String name = getDeathTicketName();
+            if (name != null && !name.isBlank()) {
+                meta.displayName(MiniMessage.miniMessage().deserialize(name));
+            }
+            List<String> lore = getDeathTicketLore();
+            if (lore != null && !lore.isEmpty()) {
+                List<Component> loreComponents = new ArrayList<>(lore.size());
+                for (String line : lore) {
+                    loreComponents.add(MiniMessage.miniMessage().deserialize(line));
+                }
+                meta.lore(loreComponents);
+            }
+            meta.getPersistentDataContainer().set(DEATH_TICKET_KEY, PersistentDataType.INTEGER, 1);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    // ============ 卷轴 ============
+
+    /** 回城卷轴在物品 PDC 中的标识 key。 */
+    public static final NamespacedKey SCROLL_TOWN_KEY = new NamespacedKey("customdeath", "scroll-town");
+
+    /** 回溯卷轴在物品 PDC 中的标识 key。 */
+    public static final NamespacedKey SCROLL_RECALL_KEY = new NamespacedKey("customdeath", "scroll-recall");
+
+    public boolean isScrollTownEnabled() {
+        return config.getBoolean("settings.scrolls.town.enabled", true);
+    }
+
+    public Material getScrollTownMaterial() {
+        return parseMaterial("settings.scrolls.town.material", Material.PAPER);
+    }
+
+    public String getScrollTownName() {
+        return config.getString("settings.scrolls.town.name", "<aqua><bold>回城卷轴</bold></aqua>");
+    }
+
+    public List<String> getScrollTownLore() {
+        return config.getStringList("settings.scrolls.town.lore");
+    }
+
+    public String getScrollTownMessage() {
+        return config.getString("settings.scrolls.town.message", "<aqua>你回到了家中</aqua>");
+    }
+
+    public boolean isScrollRecallEnabled() {
+        return config.getBoolean("settings.scrolls.recall.enabled", true);
+    }
+
+    public Material getScrollRecallMaterial() {
+        return parseMaterial("settings.scrolls.recall.material", Material.PAPER);
+    }
+
+    public String getScrollRecallName() {
+        return config.getString("settings.scrolls.recall.name", "<light_purple><bold>回溯卷轴</bold></light_purple>");
+    }
+
+    public List<String> getScrollRecallLore() {
+        return config.getStringList("settings.scrolls.recall.lore");
+    }
+
+    public String getScrollRecallMessage() {
+        return config.getString("settings.scrolls.recall.message", "<light_purple>你回到了死亡地点</light_purple>");
+    }
+
+    /**
+     * 构造一张（或多张）回城卷轴物品（带 PDC 标识 {@link #SCROLL_TOWN_KEY}）。
+     */
+    public ItemStack buildScrollTown(int amount) {
+        return buildScrollItem(getScrollTownMaterial(), getScrollTownName(), getScrollTownLore(),
+                SCROLL_TOWN_KEY, amount);
+    }
+
+    /**
+     * 构造一张（或多张）回溯卷轴物品（带 PDC 标识 {@link #SCROLL_RECALL_KEY}）。
+     */
+    public ItemStack buildScrollRecall(int amount) {
+        return buildScrollItem(getScrollRecallMaterial(), getScrollRecallName(), getScrollRecallLore(),
+                SCROLL_RECALL_KEY, amount);
+    }
+
+    /** 解析配置中的 Material 枚举名，无效时回退默认值。 */
+    private Material parseMaterial(String path, Material fallback) {
+        String name = config.getString(path);
+        if (name == null || name.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Material.valueOf(name.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return fallback;
+        }
+    }
+
+    /** 构造带名称、描述与 PDC 标识的物品（卷轴通用）。 */
+    private ItemStack buildScrollItem(Material material, String name, List<String> lore,
+                                      NamespacedKey key, int amount) {
+        ItemStack item = new ItemStack(material, Math.max(1, amount));
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            if (name != null && !name.isBlank()) {
+                meta.displayName(MiniMessage.miniMessage().deserialize(name));
+            }
+            if (lore != null && !lore.isEmpty()) {
+                List<Component> loreComponents = new ArrayList<>(lore.size());
+                for (String line : lore) {
+                    loreComponents.add(MiniMessage.miniMessage().deserialize(line));
+                }
+                meta.lore(loreComponents);
+            }
+            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, 1);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     // ============ 消息模板 ============

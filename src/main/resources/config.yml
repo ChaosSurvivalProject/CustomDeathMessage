@@ -113,6 +113,58 @@ settings:
     # 是否启用首杀文案（每次服务器重启后触发一次）
     enabled: true
 
+  # ============ 死亡保护券 ============
+  # 玩家背包携带保护券时，死亡免于掉落物品，并消耗一张券。
+  # 发放命令：/customdeath ticket <玩家> [数量]（需权限 customdeath.ticket）
+  death-ticket:
+    # 是否启用死亡保护券
+    enabled: true
+    # 券的物品材质（Bukkit Material 枚举名，如 PAPER / GOLD_NUGGET / TOTEM_OF_UNDYING）
+    material: PAPER
+    # 券的显示名（支持 MiniMessage 颜色标签）
+    name: "<yellow><bold>死亡保护券</bold></yellow>"
+    # 券的描述（每行一条，支持 MiniMessage）
+    lore:
+      - "<gray>携带此券死亡时</gray>"
+      - "<green>免于掉落物品，并消耗一张</green>"
+    # 触发时是否同时保留经验等级
+    keep-level: true
+    # 触发时给玩家的提示消息（支持 MiniMessage，留空则不提示）
+    message: "<green><bold>✔</bold> 死亡保护券生效，你免于死亡掉落</green>"
+
+  # ============ 卷轴 ============
+  # 使用方式：手持卷轴右键点击使用（物品以 PDC 标识识别）
+  scrolls:
+    # 回城卷轴：传送到床（重生点）位置；未设置重生点时不可用
+    town:
+      # 是否启用回城卷轴
+      enabled: true
+      # 卷轴材质（Bukkit Material 枚举名）
+      material: PAPER
+      # 卷轴显示名（支持 MiniMessage）
+      name: "<aqua><bold>回城卷轴</bold></aqua>"
+      # 卷轴描述（每行一条，支持 MiniMessage）
+      lore:
+        - "<gray>右键使用</gray>"
+        - "<green>传送到你上次睡觉的位置</green>"
+      # 使用成功后的提示消息（支持 MiniMessage）
+      message: "<aqua>你回到了家中</aqua>"
+    # 回溯卷轴：传送到最近的死亡点；无死亡点记录时不可用
+    recall:
+      # 是否启用回溯卷轴
+      enabled: true
+      # 卷轴材质（Bukkit Material 枚举名）
+      material: PAPER
+      # 卷轴显示名（支持 MiniMessage）
+      name: "<light_purple><bold>回溯卷轴</bold></light_purple>"
+      # 卷轴描述（每行一条，支持 MiniMessage）
+      lore:
+        - "<gray>右键使用</gray>"
+        - "<green>传送到最近的死亡地点</green>"
+        - "<red>无死亡记录时无法使用</red>"
+      # 使用成功后的提示消息（支持 MiniMessage）
+      message: "<light_purple>你回到了死亡地点</light_purple>"
+
 
 # ============================================================
 #  死亡消息模板

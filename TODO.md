@@ -25,12 +25,12 @@
 
 ## P1 · 击杀者互动（需引入轻量内存统计，重启清零）
 
-- [x] **击杀者专属反馈** —— 击杀者收到独立私聊消息（"你击杀了 Steve！"），与死亡播报解耦，提升 PVP 手感。
-  改动：`DeathListener` 向 killer 单独发消息；`config.yml` 新增 `killer-message:` 模板。
-- [x] **复仇提示** —— 记录玩家间击杀关系，播报时附「这是 xxx 第 N 次击杀你」。
-  改动：`DeathListener` 维护击杀关系 Map；`MessageFormatter` 支持相关占位符或尾部拼接。
-- [x] **连杀计数** —— 玩家连续击杀数显示在击杀反馈中（"5 连杀！"），死亡时清零。
-  改动：`DeathListener` 维护连杀 Map；击杀反馈模板新增连杀占位符。
+- [x] **击杀者专属反馈** —— 击杀者收到独立确认消息（"你击杀了 Steve！"），以 **ActionBar** 形式展示（仅击杀者可见），与死亡播报解耦，提升 PVP 手感。
+  改动：`DeathListener` 向 killer `sendActionBar`；`config.yml` 新增 `killer-feedback:` 配置与 `messages.killer-feedback` 文案池。
+- [x] ~~**复仇提示**~~ —— 记录玩家间击杀关系，播报时附「这是 xxx 第 N 次击杀你」。
+  状态：曾实现，后于展示升级提交 `07c66ba` **移除**（聊天栏互动文本清理，killsByKiller / revenge 配置与 getter 已删除）。如需恢复需重新实现。
+- [x] **连杀计数** —— 玩家连续击杀数按等级称号展示（二连击破/三连决胜/四连超凡/五连绝世），以 **Title 屏幕大字** 展示给广播范围玩家，死亡时清零。
+  改动：`DeathListener` 维护连杀 Map；`ConfigManager.getKillStreakTitle` 解析称号；`settings.kill-streak.titles` 配置称号映射。
 - [x] **首杀（第一滴血）文案** —— 服务器启动后的第一次玩家死亡播报特殊「首杀」文案。
   改动：`DeathListener` 加一次性标记，命中时强制使用首杀模板。
 
@@ -40,15 +40,15 @@
   改动：新增 `DataManager`（YAML 持久化）+ `ReloadCommand` 新增 stats 子命令。
 - [ ] **TOP 死亡排行榜** —— `/customdeath top` 展示全服死亡次数排行。
   改动：基于 DataManager 数据聚合排序。
-- [ ] **死亡记录持久化** —— 玩家死亡记录（时间/分类/击杀者/坐标）落盘，重启不丢；P1 的复仇/连杀统计可升级为持久化版本。
+- [ ] **死亡记录持久化** —— 玩家死亡记录（时间/分类/击杀者/坐标）落盘，重启不丢；P1 的连杀统计可升级为持久化版本。
   改动：新增 `DataManager` + 数据目录 `plugins/CustomDeathMessages/data/`。
 - [ ] **摔落高度** —— `{fall_height}` 占位符，坠亡时显示"从 52 格坠落"。
   改动：需追踪玩家落地前最高点（监听移动或记录伤害事件），`MessageFormatter` 新增占位符。
 
 ## P2 · 展示与系统增强
 
-- [ ] **Title / ActionBar 播报通道** —— 死亡消息可选以 Title 大标题或底部 ActionBar 展示，不占用聊天栏。
-  改动：`broadcast()` 增加通道配置分支（adventure `showTitle` / `sendActionBar`）。
+- [x] **Title / ActionBar 播报通道** —— 击杀反馈以底部 ActionBar 展示（仅击杀者可见），连杀称号以屏幕中央 Title 大字展示（广播范围玩家可见），不占用聊天栏。
+  实现：`DeathListener` 使用 adventure `sendActionBar` / `Title.title`；配置见 `settings.kill-streak.show-title / title-main / title-sub / title-fade-in / title-fade-stay / title-fade-out`（提交 07c66ba）。
 - [ ] **PlaceholderAPI 软依赖** —— 模板支持 `%player_name%` 等外部变量，向服务器生态靠拢。
   改动：`pom.xml` 加可选依赖 + 运行时检测，`MessageFormatter` 增加变量解析分支。
 - [ ] **死亡命令钩子** —— 死亡时按配置执行命令列表（联动 back/保险等插件），可设权限与概率。
@@ -61,3 +61,5 @@
 ## 已完成
 
 - （历史完成项按此记录，例如：`[x] 初版 1.0.0 —— 死亡分类播报 / 随机·轮询选文 / 广播范围 / 死亡音效 / 武器 hover 详情`）
+- [x] **死亡保护券** —— 背包携带保护券时死亡免掉落（可选保留经验），消耗一张。PDC 标识防伪造；`/customdeath ticket <玩家> [数量]` 发放（权限 `customdeath.ticket`）。配置：`settings.death-ticket`。
+- [x] **回城 / 回溯卷轴** —— 右键使用：回城卷轴传送到床位置（无床不可用）、回溯卷轴传送到最近死亡点（无记录不可用）。死亡点记录持久化到 `data/death-points.yml`（重启不丢）。`/customdeath scroll <town|recall> <玩家> [数量]` 发放（权限 `customdeath.scroll`）。配置：`settings.scrolls`。

@@ -169,6 +169,10 @@ public class DeathListener implements Listener {
         }
 
         Player player = event.getEntity();
+
+        // 记录最近死亡点（供回溯卷轴使用，不受 enabled 开关影响）
+        plugin.getDeathPointManager().recordDeath(player);
+
         DeathInfo info = resolveDeathInfo(player);
 
         // 控制台日志（可选）
