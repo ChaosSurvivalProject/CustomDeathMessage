@@ -41,11 +41,16 @@ public class DeathTicketListener implements Listener {
             return;
         }
 
-        // 免于物品掉落（可选同时保留经验等级）
+        // 免于物品与经验掉落：采用「保留标志 + 显式清空」双保险。
+        // 仅设置 keep 标志在部分 Paper 版本/配置下不足以彻底阻止掉落
+        // （表现为玩家虽保留背包与经验，但地上仍生成掉落物与经验球），
+        // 因此额外清空掉落列表并把掉落经验归零，确保不会生成可拾取物。
         event.setKeepInventory(true);
         if (cfg.isDeathTicketKeepLevel()) {
             event.setKeepLevel(true);
         }
+        event.getDrops().clear();
+        event.setDroppedExp(0);
 
         // 消耗一张券（amount > 1 时减一，否则整格清除）
         ItemStack ticket = player.getInventory().getItem(slot);
