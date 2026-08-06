@@ -11,15 +11,15 @@ import org.bukkit.inventory.ShapelessRecipe;
 /**
  * 合成配方注册器。
  * <p>
- * 为死亡保护券、回城卷轴、回溯卷轴注册无序合成配方，
- * 产物为带 PDC 标识的标准物品（{@link ConfigManager#buildDeathTicket} 等）。
+ * 为护身卷轴、回城卷轴、回溯卷轴注册无序合成配方，
+ * 产物为带 PDC 标识的标准物品（{@link ConfigManager#buildScrollProtect} 等）。
  *
  * <p>配方一览（均可在 config.yml 通过 {@code settings.recipes.enabled} 总开关关闭，
- * 成本梯度：回城卷轴 &lt; 回溯卷轴 &lt; 死亡保护券）：
+ * 成本梯度：回城卷轴 &lt; 回溯卷轴 &lt; 护身卷轴）：
  * <ul>
  *   <li>回城卷轴：纸 ×2 + 任意颜色的床 + 末影珍珠 → 回城卷轴 ×1</li>
  *   <li>回溯卷轴：纸 ×2 + 末影珍珠 ×2 + 回响碎片 → 回溯卷轴 ×1</li>
- *   <li>死亡保护券：纸 ×2 + 金锭 ×2 + 下界之星 → 死亡保护券 ×1</li>
+ *   <li>护身卷轴：纸 ×2 + 金锭 ×2 + 下界之星 → 护身卷轴 ×1</li>
  * </ul>
  */
 public class RecipeManager {
@@ -51,8 +51,8 @@ public class RecipeManager {
 
         registerTownScrollRecipe();
         registerRecallScrollRecipe();
-        registerDeathTicketRecipe();
-        plugin.getLogger().info("已注册 3 个合成配方（回城卷轴 / 回溯卷轴 / 死亡保护券）");
+        registerProtectScrollRecipe();
+        plugin.getLogger().info("已注册 3 个合成配方（护身卷轴 / 回城卷轴 / 回溯卷轴）");
     }
 
     /**
@@ -80,11 +80,11 @@ public class RecipeManager {
     }
 
     /**
-     * 死亡保护券：纸 ×2 + 金锭 ×2 + 下界之星 → 死亡保护券 ×1。
+     * 护身卷轴：纸 ×2 + 金锭 ×2 + 下界之星 → 护身卷轴 ×1。
      */
-    private void registerDeathTicketRecipe() {
-        NamespacedKey key = new NamespacedKey(plugin, "death_ticket");
-        ShapelessRecipe recipe = new ShapelessRecipe(key, plugin.getConfigManager().buildDeathTicket(1));
+    private void registerProtectScrollRecipe() {
+        NamespacedKey key = new NamespacedKey(plugin, "scroll_protect");
+        ShapelessRecipe recipe = new ShapelessRecipe(key, plugin.getConfigManager().buildScrollProtect(1));
         recipe.addIngredient(Material.PAPER, 2);
         recipe.addIngredient(Material.GOLD_INGOT, 2);
         recipe.addIngredient(Material.NETHER_STAR);

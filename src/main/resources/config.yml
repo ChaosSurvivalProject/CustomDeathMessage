@@ -25,7 +25,7 @@ settings:
   # 是否启用插件（false 时完全恢复原版死亡信息）
   enabled: true
 
-  # 是否注册合成配方（回城卷轴 / 回溯卷轴 / 死亡保护券）
+  # 是否注册合成配方（护身卷轴 / 回城卷轴 / 回溯卷轴）
   # 关闭后配方从配方书中移除（已注册的服务器需重启才生效）
   recipes:
     enabled: true
@@ -118,28 +118,26 @@ settings:
     # 是否启用首杀文案（每次服务器重启后触发一次）
     enabled: true
 
-  # ============ 死亡保护券 ============
-  # 玩家背包携带保护券时，死亡免于掉落物品，并消耗一张券。
-  # 发放命令：/customdeath ticket <玩家> [数量]（需权限 customdeath.ticket）
-  death-ticket:
-    # 是否启用死亡保护券
-    enabled: true
-    # 券的物品材质（Bukkit Material 枚举名，如 PAPER / GOLD_NUGGET / TOTEM_OF_UNDYING）
-    material: PAPER
-    # 券的显示名（支持 MiniMessage 颜色标签）
-    name: "<yellow><bold>死亡保护券</bold></yellow>"
-    # 券的描述（每行一条，支持 MiniMessage）
-    lore:
-      - "<gray>携带此券死亡时</gray>"
-      - "<green>免于掉落物品，并消耗一张</green>"
-    # 触发时是否同时保留经验等级
-    keep-level: true
-    # 触发时给玩家的提示消息（支持 MiniMessage，留空则不提示）
-    message: "<green><bold>✔</bold> 死亡保护券生效，你免于死亡掉落</green>"
-
-  # ============ 卷轴 ============
-  # 使用方式：手持卷轴右键点击使用（物品以 PDC 标识识别）
+  # ============ 卷轴（护身 / 回城 / 回溯）============
+  # 护身卷轴被动触发（死亡时免掉落），回城/回溯卷轴手持右键使用；物品均以 PDC 标识识别
   scrolls:
+    # 护身卷轴：玩家背包（含装备栏与副手）携带时，死亡免于掉落物品与经验，并消耗一张
+    # 发放命令：/customdeath scroll protect <玩家> [数量]（需权限 customdeath.scroll）
+    protect:
+      # 是否启用护身卷轴
+      enabled: true
+      # 卷轴材质（Bukkit Material 枚举名，如 PAPER / GOLD_NUGGET / TOTEM_OF_UNDYING）
+      material: PAPER
+      # 卷轴显示名（支持 MiniMessage）
+      name: "<yellow><bold>护身卷轴</bold></yellow>"
+      # 卷轴描述（每行一条，支持 MiniMessage）
+      lore:
+        - "<gray>携带此卷轴死亡时</gray>"
+        - "<green>免于掉落物品与经验，并消耗一张</green>"
+      # 触发时是否同时保留经验等级
+      keep-level: true
+      # 触发时给玩家的提示消息（支持 MiniMessage，留空则不提示）
+      message: "<green><bold>✔</bold> 护身卷轴生效，你免于死亡掉落</green>"
     # 回城卷轴：传送到床（重生点）位置；未设置重生点时不可用
     town:
       # 是否启用回城卷轴

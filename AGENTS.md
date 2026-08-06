@@ -38,14 +38,13 @@ mvn clean package
 ```
 src/main/java/com/customdeath/
 ├── CustomDeathMessages.java   # 主类 (JavaPlugin)：装配各组件，注册监听器与命令
-├── config/ConfigManager.java  # config.yml 加载、分类模板存取、随机/轮询选文、保护券/卷轴构造
+├── config/ConfigManager.java  # config.yml 加载、分类模板存取、随机/轮询选文、护身/回城/回溯卷轴构造
 ├── data/DeathPointManager.java # 最近死亡点记录（YAML 持久化，供回溯卷轴使用）
 ├── listener/DeathListener.java# 死亡事件监听：原因→分类解析、广播、音效、连杀/首杀、死亡点记录
-├── listener/DeathTicketListener.java # 死亡保护券监听：携带券免掉落并消耗（优先级 HIGH）
-├── listener/ScrollListener.java # 卷轴使用监听：回城/回溯卷轴右键传送并消耗
+├── listener/ScrollListener.java # 卷轴监听：护身卷轴（死亡免掉落，HIGH）+ 回城/回溯卷轴（右键传送）
 ├── message/MessageFormatter.java # MiniMessage 格式化与占位符替换
-├── recipe/RecipeManager.java   # 合成配方注册（回城/回溯卷轴、死亡保护券，无序合成）
-└── command/ReloadCommand.java # /customdeath 命令（reload / version / ticket / scroll）
+├── recipe/RecipeManager.java   # 合成配方注册（护身/回城/回溯卷轴，无序合成）
+└── command/ReloadCommand.java # /customdeath 命令（reload / version / scroll）
 src/main/resources/
 ├── plugin.yml                 # 插件元数据、命令、权限（api-version: '1.20'）
 └── config.yml                 # 全部可配置项 + 死亡文案模板（占位符见下文）
@@ -118,13 +117,13 @@ PlayerDeathEvent (HIGHEST)
 
 ## 关键文件行为摘要
 
-- `plugin.yml`：命令 `customdeath`（别名 `cdm`），子命令 `reload`（权限 `customdeath.reload`，默认 op）、`version`、`ticket`（权限 `customdeath.ticket`，默认 op，发保护券）、`scroll`（权限 `customdeath.scroll`，默认 op，发回城/回溯卷轴）。**改命令名/权限时保持 yml 与 `ReloadCommand` 一致**。
-- `config.yml` 结构：`settings.*`（开关、广播模式、选文策略、颜色、音效、击杀者互动、死亡保护券、卷轴）+ `messages.<分类>: [文案列表]`。分类注释用 `# ----` 分隔线分组。击杀者互动配置节 `settings.killer-feedback` / `kill-streak` / `first-blood`，与 `DeathListener` 的统计逻辑一一对应。
-- **物品类功能统一模式**：保护券 / 回城卷轴 / 回溯卷轴均为「配置材质+名称+lore + PDC 标识」的物品（key 见 `ConfigManager` 静态常量 `DEATH_TICKET_KEY` / `SCROLL_TOWN_KEY` / `SCROLL_RECALL_KEY`），**识别靠 PDC 而非显示名**（防玩家重命名伪造），由 `ConfigManager.buildXxx(amount)` 构造。
-  - 死亡保护券：`DeathTicketListener`（HIGH 优先级）检测背包（含装备/副手），命中 `setKeepInventory(true)`（可选保留经验）并消耗一张。
-  - 卷轴：`ScrollListener` 监听右键（`PlayerInteractEvent`），`setCancelled(true)` 后传送并消耗主手一张；回城卷轴传送到 `getBedSpawnLocation()`（无床不消耗），回溯卷轴传送到 `DeathPointManager` 记录的最近死亡点（无记录不消耗；死亡点向上 6 格内无可站立位置时提示不可达不消耗）。
+- `plugin.yml`：命令 `customdeath`（别名 `cdm`），子命令 `reload`（权限 `customdeath.reload`，默认 op）、`version`、`scroll`（权限 `customdeath.scroll`，默认 op，发护身/回城/回溯卷轴，用法 `scroll <protect|town|recall> <玩家> [数量]`）。**改命令名/权限时保持 yml 与 `ReloadCommand` 一致**。
+- `config.yml` 结构：`settings.*`（开关、广播模式、选文策略、颜色、音效、击杀者互动、卷轴（`scrolls.protect` / `scrolls.town` / `scrolls.recall`））+ `messages.<分类>: [文案列表]`。分类注释用 `# ----` 分隔线分组。击杀者互动配置节 `settings.killer-feedback` / `kill-streak` / `first-blood`，与 `DeathListener` 的统计逻辑一一对应。
+- **物品类功能统一模式**：护身 / 回城 / 回溯卷轴均为「配置材质+名称+lore + PDC 标识」的物品（key 见 `ConfigManager` 静态常量 `SCROLL_PROTECT_KEY` / `SCROLL_TOWN_KEY` / `SCROLL_RECALL_KEY`），**识别靠 PDC 而非显示名**（防玩家重命名伪造），由 `ConfigManager.buildScrollXxx(amount)` 构造。
+  - 护身卷轴：`ScrollListener` 的 `onPlayerDeath`（HIGH 优先级）检测背包（含装备/副手），命中则 `setKeepInventory(true)`（可选保留经验）+ 清空 `drops` 与 `droppedExp` 双保险，并消耗一张。
+  - 回城 / 回溯卷轴：`ScrollListener` 监听右键（`PlayerInteractEvent`），`setCancelled(true)` 后传送并消耗主手一张；回城卷轴传送到 `getBedSpawnLocation()`（无床不消耗），回溯卷轴传送到 `DeathPointManager` 记录的最近死亡点（无记录不消耗；死亡点向上 6 格内无可站立位置时提示不可达不消耗）。
 - **死亡点记录**：`DeathListener` 每次死亡时调用 `DeathPointManager.recordDeath`（不受 `settings.enabled` 开关影响），数据持久化到 `plugins/CustomDeathMessages/data/death-points.yml`（重启不丢）。
-- **合成配方**：`RecipeManager` 在插件启动时注册 3 个无序配方（产物均为带 PDC 标识的标准物品，可在合成台/配方书使用），成本梯度：回城卷轴 = 纸 ×2 + 任意颜色床 + 末影珍珠；回溯卷轴 = 纸 ×2 + 末影珍珠 ×2 + 回响碎片；死亡保护券 = 纸 ×2 + 金锭 ×2 + 下界之星。总开关 `settings.recipes.enabled`（默认 true；关闭后需重启服务器移除已注册配方）。产物数量若后续调整，注意 ShapelessRecipe 产物为 `buildXxx(1)`。
+- **合成配方**：`RecipeManager` 在插件启动时注册 3 个无序配方（产物均为带 PDC 标识的标准物品，可在合成台/配方书使用），成本梯度：回城卷轴 = 纸 ×2 + 任意颜色床 + 末影珍珠；回溯卷轴 = 纸 ×2 + 末影珍珠 ×2 + 回响碎片；护身卷轴 = 纸 ×2 + 金锭 ×2 + 下界之星。总开关 `settings.recipes.enabled`（默认 true；关闭后需重启服务器移除已注册配方）。产物数量若后续调整，注意 ShapelessRecipe 产物为 `buildScrollXxx(1)`。
 - 事件优先级 `EventPriority.HIGHEST`；音效 `SoundCategory.PLAYERS`；广播按 `distanceSquared` 比较（nearby 模式）。
 - 环境原因分类表 `CAUSE_CATEGORIES` 中，`FALLING_BLOCK→fall_block`、`DRAGON_BREATH/THORNS→magic` 等合并映射，改动前先确认现有归类。
 

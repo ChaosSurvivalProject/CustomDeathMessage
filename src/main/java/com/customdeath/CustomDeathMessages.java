@@ -4,7 +4,6 @@ import com.customdeath.command.ReloadCommand;
 import com.customdeath.config.ConfigManager;
 import com.customdeath.data.DeathPointManager;
 import com.customdeath.listener.DeathListener;
-import com.customdeath.listener.DeathTicketListener;
 import com.customdeath.listener.ScrollListener;
 import com.customdeath.message.MessageFormatter;
 import com.customdeath.recipe.RecipeManager;
@@ -36,10 +35,9 @@ public final class CustomDeathMessages extends JavaPlugin {
 
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
-        getServer().getPluginManager().registerEvents(new DeathTicketListener(this), this);
         getServer().getPluginManager().registerEvents(new ScrollListener(this), this);
 
-        // 注册合成配方（回城/回溯卷轴、死亡保护券）
+        // 注册合成配方（护身/回城/回溯卷轴）
         new RecipeManager(this).registerRecipes();
 
         // 注册命令

@@ -265,85 +265,41 @@ public class ConfigManager {
         return config.getBoolean("settings.first-blood.enabled", true);
     }
 
-    // ============ 死亡保护券 ============
+    // ============ 卷轴（护身 / 回城 / 回溯，统一物品体系）============
 
-    /** 保护券在物品 PDC 中的标识 key（用于识别券物品，防重命名误判）。 */
-    public static final NamespacedKey DEATH_TICKET_KEY = new NamespacedKey("customdeath", "death-ticket");
+    /** 护身卷轴在物品 PDC 中的标识 key（死亡保护，防重命名误判）。 */
+    public static final NamespacedKey SCROLL_PROTECT_KEY = new NamespacedKey("customdeath", "scroll-protect");
 
-    public boolean isDeathTicketEnabled() {
-        return config.getBoolean("settings.death-ticket.enabled", true);
+    public boolean isScrollProtectEnabled() {
+        return config.getBoolean("settings.scrolls.protect.enabled", true);
     }
 
-    /**
-     * 解析保护券物品材质（Material 枚举名）。
-     *
-     * @return 材质，配置无效或为空时回退为 PAPER
-     */
-    public Material getDeathTicketMaterial() {
-        return parseMaterial("settings.death-ticket.material", Material.PAPER);
+    public Material getScrollProtectMaterial() {
+        return parseMaterial("settings.scrolls.protect.material", Material.PAPER);
     }
 
-    /**
-     * @return 保护券显示名（MiniMessage 标签），可为 null
-     */
-    public String getDeathTicketName() {
-        return config.getString("settings.death-ticket.name", "<yellow><bold>死亡保护券</bold></yellow>");
+    public String getScrollProtectName() {
+        return config.getString("settings.scrolls.protect.name", "<yellow><bold>护身卷轴</bold></yellow>");
     }
 
-    /**
-     * @return 保护券描述（每行为一条 MiniMessage），可为空列表
-     */
-    public List<String> getDeathTicketLore() {
-        return config.getStringList("settings.death-ticket.lore");
+    public List<String> getScrollProtectLore() {
+        return config.getStringList("settings.scrolls.protect.lore");
     }
 
-    /**
-     * @return 触发保护时是否同时保留经验等级
-     */
-    public boolean isDeathTicketKeepLevel() {
-        return config.getBoolean("settings.death-ticket.keep-level", true);
+    public boolean isScrollProtectKeepLevel() {
+        return config.getBoolean("settings.scrolls.protect.keep-level", true);
     }
 
-    /**
-     * @return 触发保护时给玩家的提示消息（MiniMessage），可为 null
-     */
-    public String getDeathTicketMessage() {
-        return config.getString("settings.death-ticket.message",
-                "<green><bold>✔</bold> 死亡保护券生效，你免于死亡掉落</green>");
+    public String getScrollProtectMessage() {
+        return config.getString("settings.scrolls.protect.message",
+                "<green><bold>✔</bold> 护身卷轴生效，你免于死亡掉落</green>");
     }
 
-    /**
-     * 构造一张（或多张）死亡保护券物品。
-     * <p>
-     * 券物品带名称、描述与 PDC 标识（{@link #DEATH_TICKET_KEY}），
-     * 供 {@code /customdeath ticket} 命令发放使用。
-     *
-     * @param amount 数量（至少 1）
-     * @return 保护券 ItemStack
-     */
-    public ItemStack buildDeathTicket(int amount) {
-        ItemStack item = new ItemStack(getDeathTicketMaterial(), Math.max(1, amount));
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String name = getDeathTicketName();
-            if (name != null && !name.isBlank()) {
-                meta.displayName(MiniMessage.miniMessage().deserialize(name));
-            }
-            List<String> lore = getDeathTicketLore();
-            if (lore != null && !lore.isEmpty()) {
-                List<Component> loreComponents = new ArrayList<>(lore.size());
-                for (String line : lore) {
-                    loreComponents.add(MiniMessage.miniMessage().deserialize(line));
-                }
-                meta.lore(loreComponents);
-            }
-            meta.getPersistentDataContainer().set(DEATH_TICKET_KEY, PersistentDataType.INTEGER, 1);
-            item.setItemMeta(meta);
-        }
-        return item;
+    /** 构造一张（或多张）护身卷轴物品（带 PDC 标识 {@link #SCROLL_PROTECT_KEY}）。 */
+    public ItemStack buildScrollProtect(int amount) {
+        return buildScrollItem(getScrollProtectMaterial(), getScrollProtectName(), getScrollProtectLore(),
+                SCROLL_PROTECT_KEY, amount);
     }
-
-    // ============ 卷轴 ============
 
     /** 回城卷轴在物品 PDC 中的标识 key。 */
     public static final NamespacedKey SCROLL_TOWN_KEY = new NamespacedKey("customdeath", "scroll-town");

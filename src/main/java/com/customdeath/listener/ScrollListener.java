@@ -9,8 +9,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,11 +20,14 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 /**
- * 卷轴使用监听器。
+ * 卷轴使用监听器（统一处理护身 / 回城 / 回溯三类卷轴）。
  * <p>
- * 手持回城 / 回溯卷轴右键点击时触发对应传送效果并消耗一张卷轴。
- * 卷轴物品通过 PDC 标识识别（{@link ConfigManager#SCROLL_TOWN_KEY}
- * 与 {@link ConfigManager#SCROLL_RECALL_KEY}），防重命名伪造。
+ * - 护身卷轴：玩家死亡时若背包（含装备栏与副手）携带，则免于物品与经验掉落
+ *   （保留背包 + 清空掉落列表双保险），并消耗一张；
+ *   监听优先级 HIGH，早于主监听器（HIGHEST）的播报逻辑执行。
+ * - 回城 / 回溯卷轴：手持右键点击触发对应传送效果并消耗一张（监听 PlayerInteractEvent）。
+ * 卷轴物品均通过 PDC 标识识别（{@link ConfigManager#SCROLL_PROTECT_KEY} /
+ * {@link ConfigManager#SCROLL_TOWN_KEY} / {@link ConfigManager#SCROLL_RECALL_KEY}），防重命名伪造。
  */
 public class ScrollListener implements Listener {
 
@@ -36,6 +41,76 @@ public class ScrollListener implements Listener {
     public ScrollListener(CustomDeathMessages plugin) {
         this.plugin = plugin;
     }
+
+    // ============ 护身卷轴：死亡免掉落 ============
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (!cfg.isScrollProtectEnabled()) {
+            return;
+        }
+
+        Player player = event.getEntity();
+        int slot = findProtectSlot(player);
+        if (slot < 0) {
+            return;
+        }
+
+        // 免于物品与经验掉落：采用「保留标志 + 显式清空」双保险。
+        // 仅设置 keep 标志在部分 Paper 版本/配置下不足以彻底阻止掉落
+        // （表现为玩家虽保留背包与经验，但地上仍生成掉落物与经验球），
+        // 因此额外清空掉落列表并把掉落经验归零，确保不会生成可拾取物。
+        event.setKeepInventory(true);
+        if (cfg.isScrollProtectKeepLevel()) {
+            event.setKeepLevel(true);
+        }
+        event.getDrops().clear();
+        event.setDroppedExp(0);
+
+        // 消耗一张护身卷轴（amount > 1 时减一，否则整格清除）
+        ItemStack scroll = player.getInventory().getItem(slot);
+        if (scroll != null && scroll.getAmount() > 1) {
+            scroll.setAmount(scroll.getAmount() - 1);
+        } else {
+            player.getInventory().setItem(slot, null);
+        }
+
+        // 提示玩家
+        String message = cfg.getScrollProtectMessage();
+        if (message != null && !message.isBlank()) {
+            player.sendMessage(deserialize(message));
+        }
+    }
+
+    /**
+     * 查找背包（含装备栏与副手）中第一张护身卷轴所在的格子。
+     *
+     * @return 格子索引（0-40），未找到返回 -1
+     */
+    private int findProtectSlot(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) {
+            if (isProtectScroll(contents[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 判断物品是否为护身卷轴（通过 PDC 标识识别，防重命名误判）。
+     */
+    private boolean isProtectScroll(ItemStack item) {
+        if (item == null || item.getType().isAir()) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        return meta != null && meta.getPersistentDataContainer().has(
+                ConfigManager.SCROLL_PROTECT_KEY, PersistentDataType.INTEGER);
+    }
+
+    // ============ 回城 / 回溯卷轴：右键传送 ============
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
