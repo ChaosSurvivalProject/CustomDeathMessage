@@ -249,7 +249,8 @@ public class ScrollListener implements Listener {
         int castSoundInterval = cfg.getScrollCastSoundInterval();
         float castVolume = cfg.getScrollCastSoundVolume();
         float castPitch = cfg.getScrollCastSoundPitch();
-        long[] lastCastSoundAt = {0L};
+        // 用"已流逝秒数"对齐音效触发（和 actionbar 秒数同步，避免调度 tick 抖动导致间隔翻倍）
+        int[] lastSoundAtSecond = {-1};
 
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             // 施法上下文已被移除（被打断）时，任务由 cancelCast/cancelTask 显式取消，此处仅停止逻辑
@@ -264,13 +265,14 @@ public class ScrollListener implements Listener {
                 finishCast(player, ctx.town());
                 return;
             }
-            // 每秒更新 actionbar：向上取整剩余秒数
+            // 每秒更新 actionbar：向上取整剩余秒数；已流逝秒数 = 总时长 - 剩余时长
             int seconds = (int) Math.ceil(remaining / 1000.0);
+            int elapsed = (int) Math.ceil((castTime * 1000L - remaining) / 1000.0);
             player.sendActionBar(deserialize(actionbar.replace("{time}", String.valueOf(seconds))));
-            // 按配置间隔播放节拍音效（倒计时滴答声）
-            if (castSound != null && System.currentTimeMillis() - lastCastSoundAt[0] >= castSoundInterval * 1000L) {
+            // 按配置间隔播放节拍音效（倒计时滴答声）：已流逝秒数跨过 N 倍间隔时触发一次
+            if (castSound != null && elapsed >= 0 && (lastSoundAtSecond[0] < 0 || elapsed - lastSoundAtSecond[0] >= castSoundInterval)) {
                 player.playSound(player.getLocation(), castSound, castVolume, castPitch);
-                lastCastSoundAt[0] = System.currentTimeMillis();
+                lastSoundAtSecond[0] = elapsed;
             }
         }, 0L, 20L);
 
@@ -297,13 +299,66 @@ public class ScrollListener implements Listener {
      * 配合 0.25 秒一波的刷新频率形成持续环绕的传送门效果。
      */
     private void spawnCastParticles(Player player, Particle particle, int amount) {
-        Location center = player.getLocation().clone().add(0, PARTICLE_HEIGHT, 0);
+        spawnRingParticles(player.getLocation().clone().add(0, PARTICLE_HEIGHT, 0), particle, amount, PARTICLE_RADIUS);
+    }
+
+    /**
+     * 在指定位置生成一圈水平环绕粒子（每格半径生成一个）。
+     *
+     * @param center   圆环中心位置（Y 为环的基准高度）
+     * @param particle 粒子类型
+     * @param amount   环上粒子总数
+     * @param radius   圆环半径（格）
+     */
+    private void spawnRingParticles(Location center, Particle particle, int amount, double radius) {
         double step = Math.PI * 2 / amount;
         for (int i = 0; i < amount; i++) {
             double angle = step * i;
-            double x = center.getX() + Math.cos(angle) * PARTICLE_RADIUS;
-            double z = center.getZ() + Math.sin(angle) * PARTICLE_RADIUS;
-            player.getWorld().spawnParticle(particle, x, center.getY(), z, 1, 0, 0, 0, 0);
+            double x = center.getX() + Math.cos(angle) * radius;
+            double z = center.getZ() + Math.sin(angle) * radius;
+            center.getWorld().spawnParticle(particle, x, center.getY(), z, 1, 0, 0, 0, 0);
+        }
+    }
+
+    /**
+     * 传送完成（回到目标地点）后在玩家周身播放"白色环绕"到达粒子特效。
+     * <p>
+     * 效果为连续 N 波水平圆环，每一波高度依次升高（自脚下 0.2 格起，到约 2.2 格止），
+     * 配合 END_ROD（白色光点）等粒子形成向上螺旋光晕、"传送落点闪光"的观感。
+     * 各波之间按 arrive-particle-interval-ticks 间隔调度。
+     */
+    private void playArriveParticles(Player player) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (!cfg.isScrollArriveParticleEnabled()) {
+            return;
+        }
+        Particle particle = cfg.getScrollArriveParticle();
+        if (particle == null) {
+            return;
+        }
+        int amount = cfg.getScrollArriveParticleAmount();
+        int waves = cfg.getScrollArriveParticleWaves();
+        long intervalTicks = cfg.getScrollArriveParticleIntervalTicks();
+        // 高度范围：0.2 格（脚边）~ 2.2 格（头顶附近），每波高度均匀递增
+        double yStart = 0.2;
+        double yEnd = 2.2;
+        double yStep = waves == 1 ? 0.0 : (yEnd - yStart) / (waves - 1);
+        // 半径也略有收缩，模拟"光柱汇聚"
+        double rStart = 1.15;
+        double rEnd = 0.55;
+        double rStep = waves == 1 ? 0.0 : (rEnd - rStart) / (waves - 1);
+        Location base = player.getLocation();
+        for (int w = 0; w < waves; w++) {
+            final int wave = w;
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
+                // 以玩家最新位置为基准（到达后若玩家又走动了几格也能跟随）
+                Location center = base.clone().add(0, yStart + yStep * wave, 0);
+                double radius = rStart + rStep * wave;
+                spawnRingParticles(center, particle, amount, radius);
+            }, intervalTicks * wave);
         }
     }
 
@@ -433,6 +488,7 @@ public class ScrollListener implements Listener {
         player.teleport(bed.clone().add(0.5, 0.1, 0.5));
         consumeScroll(player);
         playCompleteSound(player);
+        playArriveParticles(player);
         sendMessage(player, plugin.getConfigManager().getScrollTownMessage());
     }
 
@@ -453,6 +509,7 @@ public class ScrollListener implements Listener {
         player.teleport(safe);
         consumeScroll(player);
         playCompleteSound(player);
+        playArriveParticles(player);
         sendMessage(player, plugin.getConfigManager().getScrollRecallMessage());
     }
 

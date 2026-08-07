@@ -29,6 +29,9 @@ settings:
   # 关闭后配方从配方书中移除（已注册的服务器需重启才生效）
   recipes:
     enabled: true
+    # 玩家登录时是否自动解锁配方到配方书
+    # 开启后，玩家无需手动合成即可在配方书看到所有卷轴配方
+    auto-discover: true
 
   # 死亡播报的广播范围：
   #   global - 全服所有玩家可见
@@ -163,6 +166,22 @@ settings:
       # 完成音量与音调
       complete-sound-volume: 1.0
       complete-sound-pitch: 1.0
+      # 传送完成（回到目标地点）后是否播放"白色环绕"到达粒子特效
+      arrive-particle-enabled: true
+      # 到达粒子类型（Bukkit Particle 枚举名，常见可选值）：
+      #   END_ROD              - 末地烛（白色明亮光点，默认，最贴合"白色环绕"）
+      #   WHITE_ASH           - 白色灰烬（柔和飘散感）
+      #   SNOWFLAKE          - 雪花
+      #   ENCHANT            - 附魔台魔法粒子（偏白+字文）
+      #   SPELL_INSTANT      - 白色治疗星爆
+      # 留空则不发粒子
+      arrive-particle: END_ROD
+      # 到达粒子每波数量（环绕一圈的粒子数，越大越密集）
+      arrive-particle-amount: 24
+      # 到达粒子波数（连续几波，一波比一波高形成上升光晕）
+      arrive-particle-waves: 4
+      # 相邻两波到达粒子之间的间隔（单位：刻，20 刻 = 1 秒；越小波越密）
+      arrive-particle-interval-ticks: 3
     # 护身卷轴：玩家背包（含装备栏与副手）携带时，死亡免于掉落物品与经验，并消耗一张
     # 发放命令：/customdeath scroll protect <玩家> [数量]（需权限 customdeath.scroll）
     protect:

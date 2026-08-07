@@ -5,6 +5,10 @@ import com.customdeath.config.ConfigManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapelessRecipe;
 
@@ -13,6 +17,8 @@ import org.bukkit.inventory.ShapelessRecipe;
  * <p>
  * 为护身卷轴、回城卷轴、回溯卷轴注册无序合成配方，
  * 产物为带 PDC 标识的标准物品（{@link ConfigManager#buildScrollProtect} 等）。
+ * 同时监听 {@link PlayerJoinEvent}，在玩家登录时自动解锁配方到配方书（受
+ * {@code settings.recipes.auto-discover} 开关控制）。
  *
  * <p>配方一览（均可在 config.yml 通过 {@code settings.recipes.enabled} 总开关关闭，
  * 成本梯度：回城卷轴 &lt; 回溯卷轴 &lt; 护身卷轴）：
@@ -22,7 +28,7 @@ import org.bukkit.inventory.ShapelessRecipe;
  *   <li>护身卷轴：纸 ×2 + 金锭 ×2 + 下界之星 → 护身卷轴 ×1</li>
  * </ul>
  */
-public class RecipeManager {
+public class RecipeManager implements Listener {
 
     private final CustomDeathMessages plugin;
 
@@ -34,6 +40,11 @@ public class RecipeManager {
             Material.BROWN_BED, Material.GREEN_BED, Material.RED_BED, Material.BLACK_BED
     };
 
+    /** 配方标识（供登录时自动解锁使用）。 */
+    private NamespacedKey keyTown;
+    private NamespacedKey keyRecall;
+    private NamespacedKey keyProtect;
+
     public RecipeManager(CustomDeathMessages plugin) {
         this.plugin = plugin;
     }
@@ -41,7 +52,7 @@ public class RecipeManager {
     /**
      * 注册全部配方（受 {@code settings.recipes.enabled} 开关控制）。
      * <p>
-     * 仅在插件启动时调用一次，配方书会自动展示给玩家。
+     * 仅在插件启动时调用一次。
      */
     public void registerRecipes() {
         ConfigManager cfg = plugin.getConfigManager();
@@ -56,11 +67,35 @@ public class RecipeManager {
     }
 
     /**
+     * 玩家登录时自动解锁配方到配方书（受 {@code settings.recipes.auto-discover} 控制）。
+     * <p>
+     * 调用 {@link Player#discoverRecipe(NamespacedKey)} 将配方直接加入玩家配方书，
+     * 无需手动合成一次才能看到。已解锁的配方重复调用无副作用。
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (!cfg.isRecipesAutoDiscover() || !cfg.isRecipesEnabled()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (keyTown != null) {
+            player.discoverRecipe(keyTown);
+        }
+        if (keyRecall != null) {
+            player.discoverRecipe(keyRecall);
+        }
+        if (keyProtect != null) {
+            player.discoverRecipe(keyProtect);
+        }
+    }
+
+    /**
      * 回城卷轴：纸 ×2 + 任意颜色的床 + 末影珍珠 → 回城卷轴 ×1。
      */
     private void registerTownScrollRecipe() {
-        NamespacedKey key = new NamespacedKey(plugin, "scroll_town");
-        ShapelessRecipe recipe = new ShapelessRecipe(key, plugin.getConfigManager().buildScrollTown(1));
+        keyTown = new NamespacedKey(plugin, "scroll_town");
+        ShapelessRecipe recipe = new ShapelessRecipe(keyTown, plugin.getConfigManager().buildScrollTown(1));
         recipe.addIngredient(Material.PAPER, 2);
         recipe.addIngredient(new RecipeChoice.MaterialChoice(BEDS));
         recipe.addIngredient(Material.ENDER_PEARL);
@@ -71,8 +106,8 @@ public class RecipeManager {
      * 回溯卷轴：纸 ×2 + 末影珍珠 ×2 + 回响碎片 → 回溯卷轴 ×1。
      */
     private void registerRecallScrollRecipe() {
-        NamespacedKey key = new NamespacedKey(plugin, "scroll_recall");
-        ShapelessRecipe recipe = new ShapelessRecipe(key, plugin.getConfigManager().buildScrollRecall(1));
+        keyRecall = new NamespacedKey(plugin, "scroll_recall");
+        ShapelessRecipe recipe = new ShapelessRecipe(keyRecall, plugin.getConfigManager().buildScrollRecall(1));
         recipe.addIngredient(Material.PAPER, 2);
         recipe.addIngredient(Material.ENDER_PEARL, 2);
         recipe.addIngredient(Material.ECHO_SHARD);
@@ -83,8 +118,8 @@ public class RecipeManager {
      * 护身卷轴：纸 ×2 + 金锭 ×2 + 下界之星 → 护身卷轴 ×1。
      */
     private void registerProtectScrollRecipe() {
-        NamespacedKey key = new NamespacedKey(plugin, "scroll_protect");
-        ShapelessRecipe recipe = new ShapelessRecipe(key, plugin.getConfigManager().buildScrollProtect(1));
+        keyProtect = new NamespacedKey(plugin, "scroll_protect");
+        ShapelessRecipe recipe = new ShapelessRecipe(keyProtect, plugin.getConfigManager().buildScrollProtect(1));
         recipe.addIngredient(Material.PAPER, 2);
         recipe.addIngredient(Material.GOLD_INGOT, 2);
         recipe.addIngredient(Material.NETHER_STAR);

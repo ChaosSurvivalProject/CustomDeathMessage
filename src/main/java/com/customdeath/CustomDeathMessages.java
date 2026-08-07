@@ -37,8 +37,10 @@ public final class CustomDeathMessages extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new ScrollListener(this), this);
 
-        // 注册合成配方（护身/回城/回溯卷轴）
-        new RecipeManager(this).registerRecipes();
+        // 注册合成配方（护身/回城/回溯卷轴），同时注册为监听器以自动解锁配方书
+        RecipeManager recipeManager = new RecipeManager(this);
+        recipeManager.registerRecipes();
+        getServer().getPluginManager().registerEvents(recipeManager, this);
 
         // 注册命令
         var command = getCommand("customdeath");

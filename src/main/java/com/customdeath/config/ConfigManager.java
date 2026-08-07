@@ -84,6 +84,13 @@ public class ConfigManager {
     }
 
     /**
+     * @return 玩家登录时是否自动解锁配方到配方书
+     */
+    public boolean isRecipesAutoDiscover() {
+        return config.getBoolean("settings.recipes.auto-discover", true);
+    }
+
+    /**
      * @return 广播模式：global / world / nearby
      */
     public String getBroadcastMode() {
@@ -519,6 +526,55 @@ public class ConfigManager {
 
     public float getScrollCompleteSoundPitch() {
         return (float) config.getDouble("settings.scrolls.cast-effect.complete-sound-pitch", 1.0);
+    }
+
+    // ============ 卷轴传送完成后粒子 ============
+
+    /**
+     * @return 传送完成（回到目标地点）后是否播放到达粒子特效（白色环绕）
+     */
+    public boolean isScrollArriveParticleEnabled() {
+        return config.getBoolean("settings.scrolls.cast-effect.arrive-particle-enabled", true);
+    }
+
+    /**
+     * 解析传送完成后到达粒子类型（Bukkit {@link Particle} 枚举名）。
+     * 默认 END_ROD（白色明亮小光点，贴合"白色环绕"主题）。
+     *
+     * @return 粒子枚举，配置名无效或为空时返回 null（不播放粒子）
+     */
+    public Particle getScrollArriveParticle() {
+        String name = config.getString("settings.scrolls.cast-effect.arrive-particle", "END_ROD");
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        try {
+            return Particle.valueOf(name.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return 传送完成后每波粒子数量（环绕一圈的数量），至少 1
+     */
+    public int getScrollArriveParticleAmount() {
+        return Math.max(1, config.getInt("settings.scrolls.cast-effect.arrive-particle-amount", 24));
+    }
+
+    /**
+     * @return 传送完成后播放的粒子波数（连续 N 波，一波更比一波高形成上升环绕效果），至少 1
+     */
+    public int getScrollArriveParticleWaves() {
+        return Math.max(1, config.getInt("settings.scrolls.cast-effect.arrive-particle-waves", 4));
+    }
+
+    /**
+     * @return 传送完成后相邻两波粒子之间的 tick 间隔（20 tick = 1 秒），至少 1
+     */
+    public long getScrollArriveParticleIntervalTicks() {
+        int v = config.getInt("settings.scrolls.cast-effect.arrive-particle-interval-ticks", 3);
+        return Math.max(1L, v);
     }
 
     /** 解析配置中的音效枚举名，无效或为空时返回 null。 */

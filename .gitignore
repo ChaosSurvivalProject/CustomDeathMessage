@@ -18,3 +18,6 @@ Thumbs.db
 
 # AI 工作区数据（记忆/技能，不入库）
 .workbuddy/
+
+# 本地环境配置（JDK 路径、部署目标等，不提交）
+ENVIRONMENT.md
