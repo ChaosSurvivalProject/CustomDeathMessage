@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -327,6 +328,44 @@ public class ConfigManager {
         return config.getString("settings.scrolls.town.message", "<aqua>你回到了家中</aqua>");
     }
 
+    /**
+     * @return 回城卷轴施法倒计时秒数（0 = 立即传送，不读条）
+     */
+    public int getScrollTownCastTime() {
+        return Math.max(0, config.getInt("settings.scrolls.town.cast-time", 5));
+    }
+
+    /**
+     * @return 回城卷轴施法期间移动是否打断施法
+     */
+    public boolean isScrollTownCancelOnMove() {
+        return config.getBoolean("settings.scrolls.town.cancel-on-move", true);
+    }
+
+    /**
+     * @return 回城卷轴开始施法时的提示（支持 {time} 占位符，为总秒数）
+     */
+    public String getScrollTownCastStartMessage() {
+        return config.getString("settings.scrolls.town.cast-start-message",
+                "<aqua>开始回城，请勿移动（{time} 秒）...</aqua>");
+    }
+
+    /**
+     * @return 回城卷轴施法被打断时的提示
+     */
+    public String getScrollTownCastCancelMessage() {
+        return config.getString("settings.scrolls.town.cast-cancel-message",
+                "<red>移动打断了回城，卷轴未消耗</red>");
+    }
+
+    /**
+     * @return 回城卷轴倒计时期间 actionbar 提示（支持 {time} 占位符，为剩余秒数）
+     */
+    public String getScrollTownCountdownActionbar() {
+        return config.getString("settings.scrolls.town.countdown-actionbar",
+                "<aqua>回城传送中... {time} 秒</aqua>");
+    }
+
     public boolean isScrollRecallEnabled() {
         return config.getBoolean("settings.scrolls.recall.enabled", true);
     }
@@ -345,6 +384,84 @@ public class ConfigManager {
 
     public String getScrollRecallMessage() {
         return config.getString("settings.scrolls.recall.message", "<light_purple>你回到了死亡地点</light_purple>");
+    }
+
+    /**
+     * @return 回溯卷轴施法倒计时秒数（0 = 立即传送，不读条）
+     */
+    public int getScrollRecallCastTime() {
+        return Math.max(0, config.getInt("settings.scrolls.recall.cast-time", 5));
+    }
+
+    /**
+     * @return 回溯卷轴施法期间移动是否打断施法
+     */
+    public boolean isScrollRecallCancelOnMove() {
+        return config.getBoolean("settings.scrolls.recall.cancel-on-move", true);
+    }
+
+    /**
+     * @return 回溯卷轴开始施法时的提示（支持 {time} 占位符，为总秒数）
+     */
+    public String getScrollRecallCastStartMessage() {
+        return config.getString("settings.scrolls.recall.cast-start-message",
+                "<light_purple>开始回溯，请勿移动（{time} 秒）...</light_purple>");
+    }
+
+    /**
+     * @return 回溯卷轴施法被打断时的提示
+     */
+    public String getScrollRecallCastCancelMessage() {
+        return config.getString("settings.scrolls.recall.cast-cancel-message",
+                "<red>移动打断了回溯，卷轴未消耗</red>");
+    }
+
+    /**
+     * @return 回溯卷轴倒计时期间 actionbar 提示（支持 {time} 占位符，为剩余秒数）
+     */
+    public String getScrollRecallCountdownActionbar() {
+        return config.getString("settings.scrolls.recall.countdown-actionbar",
+                "<light_purple>回溯传送中... {time} 秒</light_purple>");
+    }
+
+    // ============ 卷轴施法表现（冷却条 / 粒子特效）============
+
+    /**
+     * @return 施法期间是否显示物品栏冷却条（类似末影珍珠的冷却动画，与 cast-time 一致）
+     */
+    public boolean isScrollCooldownEnabled() {
+        return config.getBoolean("settings.scrolls.cast-effect.cooldown-enabled", true);
+    }
+
+    /**
+     * @return 施法期间是否播放传送粒子特效
+     */
+    public boolean isScrollParticleEnabled() {
+        return config.getBoolean("settings.scrolls.cast-effect.particle-enabled", true);
+    }
+
+    /**
+     * 解析施法粒子类型（Bukkit {@link Particle} 枚举名）。
+     *
+     * @return 粒子枚举，配置名无效或为空时返回 null（不播放粒子）
+     */
+    public Particle getScrollCastParticle() {
+        String name = config.getString("settings.scrolls.cast-effect.particle", "PORTAL");
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        try {
+            return Particle.valueOf(name.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return 施法粒子每波数量（环绕 + 光环总数），至少 1
+     */
+    public int getScrollCastParticleAmount() {
+        return Math.max(1, config.getInt("settings.scrolls.cast-effect.particle-amount", 20));
     }
 
     /**

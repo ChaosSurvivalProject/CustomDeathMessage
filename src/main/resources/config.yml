@@ -121,6 +121,22 @@ settings:
   # ============ 卷轴（护身 / 回城 / 回溯）============
   # 护身卷轴被动触发（死亡时免掉落），回城/回溯卷轴手持右键使用；物品均以 PDC 标识识别
   scrolls:
+    # 施法表现（回城/回溯卷轴读条期间的通用效果）
+    cast-effect:
+      # 施法期间是否显示物品栏冷却条（类似末影珍珠的冷却动画，时长 = cast-time）
+      cooldown-enabled: true
+      # 施法期间是否播放传送粒子特效
+      particle-enabled: true
+      # 粒子类型（Bukkit Particle 枚举名，常见可选值）：
+      #   PORTAL              - 传送门紫色粒子（最贴合传送主题）
+      #   END_ROD             - 末地烛粒子（明亮小光点）
+      #   ENCHANT             - 附魔台魔法粒子
+      #   SPELL_WITCH         - 紫色魔法星
+      #   SOUL_FIRE_FLAME     - 灵魂火
+      #   留空则不发粒子
+      particle: PORTAL
+      # 每波粒子数量（环绕玩家一圈的数量，越大越密集）
+      particle-amount: 20
     # 护身卷轴：玩家背包（含装备栏与副手）携带时，死亡免于掉落物品与经验，并消耗一张
     # 发放命令：/customdeath scroll protect <玩家> [数量]（需权限 customdeath.scroll）
     protect:
@@ -152,6 +168,17 @@ settings:
         - "<green>传送到你上次睡觉的位置</green>"
       # 使用成功后的提示消息（支持 MiniMessage）
       message: "<aqua>你回到了家中</aqua>"
+      # 施法倒计时（单位：秒；0 表示立即传送，不读条）
+      # 使用后原地开始倒计时，期间移动（cancel-on-move）会被打断且不消耗卷轴
+      cast-time: 5
+      # 施法期间移动是否打断施法（打断不消耗卷轴；false 则移动不影响读条）
+      cancel-on-move: true
+      # 开始施法时的提示（支持 MiniMessage，{time} = 施法总秒数）
+      cast-start-message: "<aqua>开始回城，请勿移动（{time} 秒）...</aqua>"
+      # 施法被打断时的提示（支持 MiniMessage）
+      cast-cancel-message: "<red>移动打断了回城，卷轴未消耗</red>"
+      # 倒计时期间 actionbar 提示（支持 MiniMessage，{time} = 剩余秒数）
+      countdown-actionbar: "<aqua>回城传送中... {time} 秒</aqua>"
     # 回溯卷轴：传送到最近的死亡点；无死亡点记录时不可用
     recall:
       # 是否启用回溯卷轴
@@ -167,6 +194,17 @@ settings:
         - "<red>无死亡记录时无法使用</red>"
       # 使用成功后的提示消息（支持 MiniMessage）
       message: "<light_purple>你回到了死亡地点</light_purple>"
+      # 施法倒计时（单位：秒；0 表示立即传送，不读条）
+      # 使用后原地开始倒计时，期间移动（cancel-on-move）会被打断且不消耗卷轴
+      cast-time: 5
+      # 施法期间移动是否打断施法（打断不消耗卷轴；false 则移动不影响读条）
+      cancel-on-move: true
+      # 开始施法时的提示（支持 MiniMessage，{time} = 施法总秒数）
+      cast-start-message: "<light_purple>开始回溯，请勿移动（{time} 秒）...</light_purple>"
+      # 施法被打断时的提示（支持 MiniMessage）
+      cast-cancel-message: "<red>移动打断了回溯，卷轴未消耗</red>"
+      # 倒计时期间 actionbar 提示（支持 MiniMessage，{time} = 剩余秒数）
+      countdown-actionbar: "<light_purple>回溯传送中... {time} 秒</light_purple>"
 
 
 # ============================================================
