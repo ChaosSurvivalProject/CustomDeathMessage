@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,8 +36,9 @@ import java.util.UUID;
  *   （保留背包 + 清空掉落列表双保险），并消耗一张；
  *   监听优先级 HIGH，早于主监听器（HIGHEST）的播报逻辑执行。
  * - 回城 / 回溯卷轴：手持右键点击后进入施法倒计时（读条），期间每秒以 actionbar
- *   提示剩余秒数、物品栏显示冷却条（类似末影珍珠）、周身播放传送粒子；
- *   倒计时结束校验主手仍持有对应卷轴后传送并消耗一张。
+ *   提示剩余秒数、物品栏显示冷却条（类似末影珍珠）、周身播放传送粒子、
+ *   按配置间隔播放节拍音效；倒计时结束校验主手仍持有对应卷轴后传送（并播放
+ *   完成音效）与消耗一张。
  *   施法可被以下情况打断（打断不消耗卷轴）：移动（受 cancel-on-move 控制）、
  *   死亡、退出服务器、被传送；同一玩家施法期间重复右键会收到提示。
  *   配置 cast-time 为 0 时跳过读条，恢复"立即传送"的旧行为。
@@ -242,6 +244,13 @@ public class ScrollListener implements Listener {
             player.setCooldown(material, castTime * 20);
         }
 
+        // 施法倒计时节拍音效（仅施法者本人可听），按 cast-sound-interval 秒间隔播放
+        Sound castSound = cfg.isScrollCastSoundEnabled() ? cfg.getScrollCastSound() : null;
+        int castSoundInterval = cfg.getScrollCastSoundInterval();
+        float castVolume = cfg.getScrollCastSoundVolume();
+        float castPitch = cfg.getScrollCastSoundPitch();
+        long[] lastCastSoundAt = {0L};
+
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             // 施法上下文已被移除（被打断）时，任务由 cancelCast/cancelTask 显式取消，此处仅停止逻辑
             CastContext ctx = casting.get(uuid);
@@ -258,6 +267,11 @@ public class ScrollListener implements Listener {
             // 每秒更新 actionbar：向上取整剩余秒数
             int seconds = (int) Math.ceil(remaining / 1000.0);
             player.sendActionBar(deserialize(actionbar.replace("{time}", String.valueOf(seconds))));
+            // 按配置间隔播放节拍音效（倒计时滴答声）
+            if (castSound != null && System.currentTimeMillis() - lastCastSoundAt[0] >= castSoundInterval * 1000L) {
+                player.playSound(player.getLocation(), castSound, castVolume, castPitch);
+                lastCastSoundAt[0] = System.currentTimeMillis();
+            }
         }, 0L, 20L);
 
         // 施法期间播放传送粒子特效（每 0.25 秒一波，环绕玩家周身）
@@ -418,6 +432,7 @@ public class ScrollListener implements Listener {
         // 传送到床位置（跨世界安全，床位置由服务器保证可站）
         player.teleport(bed.clone().add(0.5, 0.1, 0.5));
         consumeScroll(player);
+        playCompleteSound(player);
         sendMessage(player, plugin.getConfigManager().getScrollTownMessage());
     }
 
@@ -437,7 +452,22 @@ public class ScrollListener implements Listener {
         }
         player.teleport(safe);
         consumeScroll(player);
+        playCompleteSound(player);
         sendMessage(player, plugin.getConfigManager().getScrollRecallMessage());
+    }
+
+    /**
+     * 传送成功（回到目标地点）后播放完成音效（仅传送者本人可听，可配置）。
+     */
+    private void playCompleteSound(Player player) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (!cfg.isScrollCompleteSoundEnabled()) {
+            return;
+        }
+        Sound sound = cfg.getScrollCompleteSound();
+        if (sound != null) {
+            player.playSound(player.getLocation(), sound, cfg.getScrollCompleteSoundVolume(), cfg.getScrollCompleteSoundPitch());
+        }
     }
 
     /**

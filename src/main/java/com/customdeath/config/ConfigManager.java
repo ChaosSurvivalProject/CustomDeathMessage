@@ -464,6 +464,76 @@ public class ConfigManager {
         return Math.max(1, config.getInt("settings.scrolls.cast-effect.particle-amount", 20));
     }
 
+    // ============ 卷轴施法音效 ============
+
+    /**
+     * @return 施法倒计时期间是否播放节拍音效（每 {#getScrollCastSoundInterval()} 秒一次）
+     */
+    public boolean isScrollCastSoundEnabled() {
+        return config.getBoolean("settings.scrolls.cast-effect.cast-sound-enabled", true);
+    }
+
+    /**
+     * 解析施法倒计时节拍音效类型。
+     *
+     * @return 音效枚举，配置名无效或为空时返回 null（不播放）
+     */
+    public Sound getScrollCastSound() {
+        return parseSound("settings.scrolls.cast-effect.cast-sound", "BLOCK_NOTE_BLOCK_PLING");
+    }
+
+    /**
+     * @return 施法倒计时节拍音效的间隔（秒），至少 1
+     */
+    public int getScrollCastSoundInterval() {
+        return Math.max(1, config.getInt("settings.scrolls.cast-effect.cast-sound-interval", 1));
+    }
+
+    public float getScrollCastSoundVolume() {
+        return (float) config.getDouble("settings.scrolls.cast-effect.cast-sound-volume", 1.0);
+    }
+
+    public float getScrollCastSoundPitch() {
+        return (float) config.getDouble("settings.scrolls.cast-effect.cast-sound-pitch", 1.0);
+    }
+
+    /**
+     * @return 传送完成（回到目标地点）后是否播放音效
+     */
+    public boolean isScrollCompleteSoundEnabled() {
+        return config.getBoolean("settings.scrolls.cast-effect.complete-sound-enabled", true);
+    }
+
+    /**
+     * 解析传送完成音效类型。
+     *
+     * @return 音效枚举，配置名无效或为空时返回 null（不播放）
+     */
+    public Sound getScrollCompleteSound() {
+        return parseSound("settings.scrolls.cast-effect.complete-sound", "ENTITY_ENDERMAN_TELEPORT");
+    }
+
+    public float getScrollCompleteSoundVolume() {
+        return (float) config.getDouble("settings.scrolls.cast-effect.complete-sound-volume", 1.0);
+    }
+
+    public float getScrollCompleteSoundPitch() {
+        return (float) config.getDouble("settings.scrolls.cast-effect.complete-sound-pitch", 1.0);
+    }
+
+    /** 解析配置中的音效枚举名，无效或为空时返回 null。 */
+    private Sound parseSound(String path, String fallback) {
+        String name = config.getString(path, fallback);
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        try {
+            return Sound.valueOf(name.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     /**
      * 构造一张（或多张）回城卷轴物品（带 PDC 标识 {@link #SCROLL_TOWN_KEY}）。
      */

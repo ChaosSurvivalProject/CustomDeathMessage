@@ -137,6 +137,32 @@ settings:
       particle: PORTAL
       # 每波粒子数量（环绕玩家一圈的数量，越大越密集）
       particle-amount: 20
+      # 施法倒计时期间是否播放节拍音效（仅施法者本人可听）
+      cast-sound-enabled: true
+      # 节拍音效类型（Bukkit Sound 枚举名，常见可选值）：
+      #   BLOCK_NOTE_BLOCK_PLING - 音符盒叮声（倒计时感强，默认）
+      #   BLOCK_NOTE_BLOCK_HAT   - 轻敲声
+      #   UI_BUTTON_CLICK        - 界面点击
+      #   ENTITY_EXPERIENCE_ORB_PICKUP - 经验球拾取
+      #   留空则不播放
+      cast-sound: BLOCK_NOTE_BLOCK_PLING
+      # 节拍音效间隔（秒，每隔 N 秒响一次）
+      cast-sound-interval: 1
+      # 节拍音量（0.0 ~ 2.0）与音调（0.5 ~ 2.0，1.0 正常）
+      cast-sound-volume: 1.0
+      cast-sound-pitch: 1.0
+      # 传送完成（回到目标地点）后是否播放音效（仅施法者本人可听）
+      complete-sound-enabled: true
+      # 完成音效类型（Bukkit Sound 枚举名，常见可选值）：
+      #   ENTITY_ENDERMAN_TELEPORT   - 末影人传送声（传送感最强，默认）
+      #   ENTITY_ENDER_EYE_DEATH     - 末影之眼破碎
+      #   BLOCK_PORTAL_TRAVEL        - 传送门穿梭
+      #   ENTITY_PLAYER_LEVELUP      - 升级音
+      #   留空则不播放
+      complete-sound: ENTITY_ENDERMAN_TELEPORT
+      # 完成音量与音调
+      complete-sound-volume: 1.0
+      complete-sound-pitch: 1.0
     # 护身卷轴：玩家背包（含装备栏与副手）携带时，死亡免于掉落物品与经验，并消耗一张
     # 发放命令：/customdeath scroll protect <玩家> [数量]（需权限 customdeath.scroll）
     protect:
