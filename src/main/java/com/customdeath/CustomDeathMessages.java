@@ -45,7 +45,7 @@ public final class CustomDeathMessages extends JavaPlugin {
         // 注册命令
         var command = getCommand("customdeath");
         if (command != null) {
-            command.setExecutor(new ReloadCommand(this));
+            command.setExecutor(new ReloadCommand(this, recipeManager));
         }
 
         getLogger().info("CustomDeathMessages v" + getPluginMeta().getVersion() + " 已启用");

@@ -1,6 +1,7 @@
 package com.customdeath.command;
 
 import com.customdeath.CustomDeathMessages;
+import com.customdeath.recipe.RecipeManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -17,17 +18,20 @@ import java.util.List;
  * <p>
  * 子命令：
  * <ul>
- *   <li>reload  — 重新加载配置</li>
+ *   <li>reload  — 重新加载配置（需权限 customdeath.reload）</li>
  *   <li>version — 查看插件版本</li>
  *   <li>scroll  — 发放护身/回城/回溯卷轴（需权限 customdeath.scroll）</li>
+ *   <li>recipe  — 查看卷轴合成配方（所有玩家可用，配合基岩版配方书不显示问题）</li>
  * </ul>
  */
 public class ReloadCommand implements TabExecutor {
 
     private final CustomDeathMessages plugin;
+    private final RecipeManager recipeManager;
 
-    public ReloadCommand(CustomDeathMessages plugin) {
+    public ReloadCommand(CustomDeathMessages plugin, RecipeManager recipeManager) {
         this.plugin = plugin;
+        this.recipeManager = recipeManager;
     }
 
     @Override
@@ -52,6 +56,14 @@ public class ReloadCommand implements TabExecutor {
                         NamedTextColor.AQUA));
             }
             case "scroll" -> handleScroll(sender, args);
+            case "recipe" -> {
+                // 配方展示需要玩家上下文（聊天栏展示），控制台无意义
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(Component.text("该命令只能由玩家执行", NamedTextColor.RED));
+                    return true;
+                }
+                recipeManager.sendRecipeOverview(player);
+            }
             default -> sendHelp(sender);
         }
         return true;
@@ -118,7 +130,7 @@ public class ReloadCommand implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             String input = args[0].toLowerCase();
-            return List.of("reload", "version", "scroll").stream()
+            return List.of("reload", "version", "scroll", "recipe").stream()
                     .filter(s -> s.startsWith(input))
                     .toList();
         }
@@ -150,6 +162,8 @@ public class ReloadCommand implements TabExecutor {
                 .append(Component.text(" - 重载配置", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text("/customdeath version", NamedTextColor.YELLOW)
                 .append(Component.text(" - 查看版本", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text("/customdeath recipe", NamedTextColor.YELLOW)
+                .append(Component.text(" - 查看卷轴合成配方", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text("/customdeath scroll <protect|town|recall> <玩家> [数量]", NamedTextColor.YELLOW)
                 .append(Component.text(" - 发放护身/回城/回溯卷轴", NamedTextColor.GRAY)));
     }

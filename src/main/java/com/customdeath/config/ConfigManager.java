@@ -91,6 +91,13 @@ public class ConfigManager {
     }
 
     /**
+     * @return 玩家加入游戏后是否在聊天栏展示一次卷轴合成配方
+     */
+    public boolean isRecipesJoinHintEnabled() {
+        return config.getBoolean("settings.recipes.join-hint-enabled", true);
+    }
+
+    /**
      * @return 广播模式：global / world / nearby
      */
     public String getBroadcastMode() {

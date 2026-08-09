@@ -32,6 +32,10 @@ settings:
     # 玩家登录时是否自动解锁配方到配方书
     # 开启后，玩家无需手动合成即可在配方书看到所有卷轴配方
     auto-discover: true
+    # 玩家加入游戏后是否在聊天栏展示一次卷轴合成配方
+    # 解决基岩版玩家（经 Geyser 连接）配方书不显示自定义配方的问题；
+    # 开启后每次加入都会提示，玩家也可随时用 /customdeath recipe 查看
+    join-hint-enabled: true
 
   # 死亡播报的广播范围：
   #   global - 全服所有玩家可见
