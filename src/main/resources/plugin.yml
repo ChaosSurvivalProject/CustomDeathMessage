@@ -5,11 +5,13 @@ api-version: '1.20'
 authors:
   - Agent Playground
 description: 个性化死亡播报插件，替代原版死亡信息，支持自定义文案与颜色
+softdepend:
+  - Geyser-Spigot
 
 commands:
   customdeath:
     description: 自定义死亡消息插件主命令
-    usage: /customdeath <reload|version|recipe|scroll>
+    usage: /cdm <reload|version|recipe|checkin|scroll>
     aliases:
       - cdm
 

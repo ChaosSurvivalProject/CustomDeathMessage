@@ -37,6 +37,28 @@ settings:
     # 开启后每次加入都会提示，玩家也可随时用 /customdeath recipe 查看
     join-hint-enabled: true
 
+  # ============ 每日签到 ============
+  # 玩家每天可通过 /customdeath checkin 签到领取卷轴奖励；
+  # 同一天不可重复签到，跨天后（服务器 0 点）自动重置
+  checkin:
+    # 是否启用每日签到
+    enabled: true
+    # 签到奖励：三种卷轴各发放的数量（0 = 不发放该种）
+    rewards:
+      protect: 1
+      town: 1
+      recall: 1
+    # 签到成功提示（{rewards} 会被替换为实际奖励列表，如「护身卷轴×1、回城卷轴×1、回溯卷轴×1」）
+    success-message: "<green><bold>✔</bold> 签到成功！获得：{rewards}，明天 0 点后可再次签到</green>"
+    # 当天重复签到提示
+    already-message: "<red>你今天已经签到过了，明天 0 点后再来吧</red>"
+    # 玩家进服时，若当天尚未签到，是否在聊天栏提示可领取（点击文本直接签到）
+    join-hint-enabled: true
+    # 进服提示文案（MiniMessage 语法，支持 <click:run_command:'/customdeath checkin'> 点击交互标签）
+    join-hint-message: "<gray>[<yellow>CustomDeathMessage</yellow>]</gray> 今天的卷轴可领取，<gold><click:run_command:'/customdeath checkin'><underlined>点击进行领取</underlined></click></gold>"
+    # 进服提示文案 - 基岩版玩家（经 Geyser 连接）：基岩端不支持聊天点击交互，提示手动输入指令（简写 /cdm checkin）
+    join-hint-message-bedrock: "<gray>[<yellow>CustomDeathMessage</yellow>]</gray> 今天的卷轴可领取，输入 <gold>/cdm checkin</gold> 进行签到"
+
   # 死亡播报的广播范围：
   #   global - 全服所有玩家可见
   #   world  - 仅死亡玩家所在世界的玩家可见

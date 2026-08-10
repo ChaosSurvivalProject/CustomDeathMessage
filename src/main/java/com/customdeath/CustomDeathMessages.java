@@ -2,7 +2,9 @@ package com.customdeath;
 
 import com.customdeath.command.ReloadCommand;
 import com.customdeath.config.ConfigManager;
+import com.customdeath.data.CheckinManager;
 import com.customdeath.data.DeathPointManager;
+import com.customdeath.listener.CheckinListener;
 import com.customdeath.listener.DeathListener;
 import com.customdeath.listener.ScrollListener;
 import com.customdeath.message.MessageFormatter;
@@ -20,6 +22,7 @@ public final class CustomDeathMessages extends JavaPlugin {
     private ConfigManager configManager;
     private MessageFormatter messageFormatter;
     private DeathPointManager deathPointManager;
+    private CheckinManager checkinManager;
 
     @Override
     public void onEnable() {
@@ -33,9 +36,13 @@ public final class CustomDeathMessages extends JavaPlugin {
         // 初始化死亡点记录（供回溯卷轴使用）
         deathPointManager = new DeathPointManager(this);
 
+        // 初始化每日签到记录（/customdeath checkin）
+        checkinManager = new CheckinManager(this);
+
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new ScrollListener(this), this);
+        getServer().getPluginManager().registerEvents(new CheckinListener(this), this);
 
         // 注册合成配方（护身/回城/回溯卷轴），同时注册为监听器以自动解锁配方书
         RecipeManager recipeManager = new RecipeManager(this);
@@ -45,7 +52,7 @@ public final class CustomDeathMessages extends JavaPlugin {
         // 注册命令
         var command = getCommand("customdeath");
         if (command != null) {
-            command.setExecutor(new ReloadCommand(this, recipeManager));
+            command.setExecutor(new ReloadCommand(this, recipeManager, checkinManager));
         }
 
         getLogger().info("CustomDeathMessages v" + getPluginMeta().getVersion() + " 已启用");
@@ -66,5 +73,9 @@ public final class CustomDeathMessages extends JavaPlugin {
 
     public DeathPointManager getDeathPointManager() {
         return deathPointManager;
+    }
+
+    public CheckinManager getCheckinManager() {
+        return checkinManager;
     }
 }

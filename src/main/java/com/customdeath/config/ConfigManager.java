@@ -98,6 +98,66 @@ public class ConfigManager {
     }
 
     /**
+     * @return 是否启用每日签到（/customdeath checkin）
+     */
+    public boolean isCheckinEnabled() {
+        return config.getBoolean("settings.checkin.enabled", true);
+    }
+
+    /**
+     * 签到奖励中指定卷轴的发放数量。
+     *
+     * @param type 卷轴类型：protect / town / recall
+     * @return 发放数量（0 表示不发放该种卷轴）
+     */
+    public int getCheckinRewardAmount(String type) {
+        return config.getInt("settings.checkin.rewards." + type, 1);
+    }
+
+    /**
+     * @return 签到成功提示模板（支持 {@code {rewards}} 占位符，替换为实际奖励列表）
+     */
+    public String getCheckinSuccessMessage() {
+        return config.getString("settings.checkin.success-message",
+                "<green><bold>✔</bold> 签到成功！获得：{rewards}，明天 0 点后可再次签到</green>");
+    }
+
+    /**
+     * @return 当天重复签到提示
+     */
+    public String getCheckinAlreadyMessage() {
+        return config.getString("settings.checkin.already-message",
+                "<red>你今天已经签到过了，明天 0 点后再来吧</red>");
+    }
+
+    /**
+     * @return 玩家进服时，若当天未签到，是否在聊天栏提示可领取
+     */
+    public boolean isCheckinJoinHintEnabled() {
+        return config.getBoolean("settings.checkin.join-hint-enabled", true);
+    }
+
+    /**
+     * @return 进服签到提示模板（MiniMessage，默认含
+     *         {@code <click:run_command:'/customdeath checkin'>} 点击交互标签）
+     */
+    public String getCheckinJoinHintMessage() {
+        return config.getString("settings.checkin.join-hint-message",
+                "<gray>[<yellow>CustomDeathMessage</yellow>]</gray> 今天的卷轴可领取，"
+                        + "<gold><click:run_command:'/customdeath checkin'><underlined>点击进行领取</underlined></click></gold>");
+    }
+
+    /**
+     * @return 进服签到提示模板 - 基岩版（Geyser 连接）玩家：基岩端不支持聊天点击交互，
+     *         提示手动输入指令（简写 {@code /cdm checkin}）
+     */
+    public String getCheckinJoinHintMessageBedrock() {
+        return config.getString("settings.checkin.join-hint-message-bedrock",
+                "<gray>[<yellow>CustomDeathMessage</yellow>]</gray> 今天的卷轴可领取，"
+                        + "输入 <gold>/cdm checkin</gold> 进行签到");
+    }
+
+    /**
      * @return 广播模式：global / world / nearby
      */
     public String getBroadcastMode() {
