@@ -109,6 +109,48 @@ settings:
     #   everyone - 全服所有在线玩家听到
     target: everyone
 
+  # ============ 击杀特效 ============
+  # 玩家击杀生物后，在被击杀者的死亡地点触发粒子爆发与音效
+  # （击杀者本人与附近玩家可见可听）。仅由玩家造成的击杀才触发。
+  kill-effect:
+    # 是否启用击杀特效
+    enabled: true
+    # 仅对敌对生物生效（true）：一切会攻击玩家的敌对生物（僵尸/骷髅/苦力怕/史莱姆/
+    # 恶魂/幻翼/猪灵/循声守卫等，含凋灵/末影龙等 Boss，均实现 Bukkit 的 Enemy 接口）；
+    # false 则对任意非玩家生物（含牛/羊/铁傀儡等中立与被动生物）生效
+    only-hostile: true
+    # PVP 击杀（玩家被玩家击杀）是否也触发特效（默认关闭，仅怪物生效）
+    include-players: false
+    # 是否播放粒子特效
+    particle-enabled: true
+    # 粒子类型（Bukkit Particle 枚举名，常见可选值）：
+    #   POOF  - 小型爆炸烟雾（默认；MC 1.20.5+ 改名，即旧名 EXPLOSION_NORMAL）
+    #   CRIT  - 暴击星芒（击杀感强）
+    #   ENCHANT - 附魔台魔法粒子
+    #   END_ROD - 末地烛光点（明亮）
+    #   SOUL_FIRE_FLAME - 灵魂火
+    #   WITCH  - 紫色魔法星（MC 1.20.5+ 改名，即旧名 SPELL_WITCH）
+    #   FIREWORK - 烟花粒子
+    #   留空则不发粒子
+    particle: POOF
+    # 粒子数量（中心爆发粒子数，越大越密集；特效还会生成一个冲击波圆环）
+    particle-amount: 40
+    # 粒子初速（0.0 ~ 1.0，越大向四周扩散越猛烈）
+    particle-speed: 0.4
+    # 是否播放击杀音效
+    sound-enabled: true
+    # 音效类型（Bukkit Sound 枚举名，常见可选值）：
+    #   ENTITY_EXPERIENCE_ORB_PICKUP - 经验球拾取（清脆轻快，默认）
+    #   ENTITY_PLAYER_LEVELUP        - 升级音（成就感强）
+    #   ENTITY_GENERIC_EXPLODE       - 爆炸声
+    #   ENTITY_ZOMBIE_DEATH          - 僵尸死亡
+    #   BLOCK_ANVIL_LAND             - 铁砧落地
+    #   留空则不播放
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP
+    # 音量（0.0 ~ 2.0，越大传播越远）与音调（0.5 ~ 2.0，1.0 正常）
+    volume: 1.0
+    pitch: 1.0
+
   # ============ 击杀者互动 ============
 
   # 击杀者专属反馈：PVP 击杀时，通过 actionbar 向击杀者本人展示一条确认消息

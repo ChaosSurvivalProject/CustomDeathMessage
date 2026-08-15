@@ -45,6 +45,7 @@ src/main/java/com/customdeath/
 ├── listener/DeathListener.java# 死亡事件监听：原因→分类解析、广播、音效、连杀/首杀、死亡点记录
 ├── listener/ScrollListener.java # 卷轴监听：护身卷轴（死亡免掉落，HIGH）+ 回城/回溯卷轴（右键施法倒计时后传送）
 ├── listener/CheckinListener.java # 进服签到提示（当天未签到则发可点击聊天栏提示，点击执行 /customdeath checkin）
+├── listener/KillEffectListener.java # 击杀特效监听：玩家击杀生物后在被击杀地点触发粒子爆发与音效（EntityDeathEvent, MONITOR）
 ├── message/MessageFormatter.java # MiniMessage 格式化与占位符替换
 ├── recipe/RecipeManager.java   # 合成配方注册 + 配方总览展示（护身/回城/回溯卷轴，无序合成）
 └── command/ReloadCommand.java # /customdeath 命令（reload / version / recipe / checkin / scroll）
@@ -64,6 +65,13 @@ PlayerDeathEvent (HIGHEST)
        ├─ event.deathMessage(null)  # 取消原版消息，必须置空
        ├─ broadcast()  # 按 global / world / nearby 分发
        └─ playDeathSound()  # victim / nearby / everyone
+```
+
+```
+EntityDeathEvent (MONITOR)   # 独立于死亡播报的另一条事件流
+  └─ KillEffectListener.onEntityDeath
+       ├─ 校验：kill-effect.enabled、击杀者为在线玩家、only-hostile / include-players 过滤
+       └─ spawnKillParticles() + world.playSound()  # 被击杀地点粒子爆发（中心爆发+冲击波圆环）+ 音效
 ```
 
 - 依赖注入方式：各组件构造器接收 `CustomDeathMessages` 实例，通过 `getConfigManager()` / `getMessageFormatter()` 访问（参考 `ReloadCommand`、`DeathListener` 写法）。
@@ -121,15 +129,16 @@ PlayerDeathEvent (HIGHEST)
 ## 关键文件行为摘要
 
 - `plugin.yml`：命令 `customdeath`（别名 `cdm`），子命令 `reload`（权限 `customdeath.reload`，默认 op）、`version`、`recipe`（**无权限要求，所有玩家可用**，查看卷轴合成配方）、`checkin`（**无权限要求，所有玩家可用**，每日签到领取卷轴奖励）、`scroll`（权限 `customdeath.scroll`，默认 op，发护身/回城/回溯卷轴，用法 `scroll <protect|town|recall> <玩家> [数量]`）。**注意：命令本身不再声明 `permission`（否则普通玩家无法执行任何子命令），权限校验全部在各子命令代码内完成**。**改命令名/权限时保持 yml 与 `ReloadCommand` 一致**。
-- `config.yml` 结构：`settings.*`（开关、广播模式、选文策略、颜色、音效、击杀者互动、卷轴（`scrolls.protect` / `scrolls.town` / `scrolls.recall`）、每日签到（`checkin`））+ `messages.<分类>: [文案列表]`。分类注释用 `# ----` 分隔线分组。击杀者互动配置节 `settings.killer-feedback` / `kill-streak` / `first-blood`，与 `DeathListener` 的统计逻辑一一对应。
+- `config.yml` 结构：`settings.*`（开关、广播模式、选文策略、颜色、音效、击杀特效、击杀者互动、卷轴（`scrolls.protect` / `scrolls.town` / `scrolls.recall`）、每日签到（`checkin`））+ `messages.<分类>: [文案列表]`。分类注释用 `# ----` 分隔线分组。击杀特效配置节 `settings.kill-effect` 对应 `KillEffectListener`；击杀者互动配置节 `settings.killer-feedback` / `kill-streak` / `first-blood`，与 `DeathListener` 的统计逻辑一一对应。
 - **物品类功能统一模式**：护身 / 回城 / 回溯卷轴均为「配置材质+名称+lore + PDC 标识」的物品（key 见 `ConfigManager` 静态常量 `SCROLL_PROTECT_KEY` / `SCROLL_TOWN_KEY` / `SCROLL_RECALL_KEY`），**识别靠 PDC 而非显示名**（防玩家重命名伪造），由 `ConfigManager.buildScrollXxx(amount)` 构造。
   - 护身卷轴：`ScrollListener` 的 `onPlayerDeath`（HIGH 优先级）检测背包（含装备/副手），命中则 `setKeepInventory(true)`（可选保留经验）+ 清空 `drops` 与 `droppedExp` 双保险，并消耗一张。
   - 回城 / 回溯卷轴：`ScrollListener` 监听右键（`PlayerInteractEvent`），`setCancelled(true)` 后进入**施法倒计时**（`cast-time` 秒，0 = 立即传送），每秒以 actionbar 提示剩余秒数；施法期间物品栏显示**冷却条**（`player.setCooldown(材质, castTime*20)`，类似末影珍珠，打断时 `setCooldown(材质, 0)` 立即恢复）、播放**传送粒子**（`settings.scrolls.cast-effect` 控制：`cooldown-enabled` / `particle-enabled` / `particle` 类型 / `particle-amount`，粒子为玩家周身水平圆环，每 5 刻一波）并按配置间隔播放**节拍音效**（`cast-sound-enabled` / `cast-sound` / `cast-sound-interval` / 音量音调，仅施法者本人可听）；倒计时结束校验主手仍持有对应卷轴后传送并消耗主手一张，传送成功后播放**完成音效**（`complete-sound-enabled` / `complete-sound` / 音量音调，默认 `ENTITY_ENDERMAN_TELEPORT`）。施法可被移动（`cancel-on-move`，阈值约 0.1 格）、死亡、退出、传送打断（打断不消耗卷轴）；同一玩家施法期间重复右键收到提示。回城卷轴传送到 `getBedSpawnLocation()`（无床不消耗），回溯卷轴传送到 `DeathPointManager` 记录的最近死亡点（无记录不消耗；死亡点向上 6 格内无可站立位置时提示不可达不消耗）。倒计时与打断提示模板见 `settings.scrolls.town/recall` 的 `cast-start-message` / `cast-cancel-message` / `countdown-actionbar`（`{time}` 占位符）。
 - **死亡点记录**：`DeathListener` 每次死亡时调用 `DeathPointManager.recordDeath`（不受 `settings.enabled` 开关影响），数据持久化到 `plugins/CustomDeathMessages/data/death-points.yml`（重启不丢）。
 - **每日签到**：`/customdeath checkin`（所有玩家可用，`ReloadCommand.handleCheckin`）按 `settings.checkin` 配置发放三种卷轴奖励（`rewards.protect/town/recall` 数量，0 = 不发），同一天不可重复签到。记录存于 `CheckinManager`（`data/checkins.yml`，key = UUID，value = 最后签到日期 `yyyy-MM-dd`），**0 点重置通过 `LocalDate.now()` 日期比较天然实现，无需定时任务**；发放采用「先 addItem、存在剩余则按原始数量 clone 副本 removeItem 整体回滚」策略（addItem 会修改传入 ItemStack 的数量），背包放不下时提示「背包空间不足」并拒绝签到（不标记，可稍后重试）。`CheckinListener` 在玩家进服（延迟 1 秒，适配 Geyser）且当天未签到时不发送提示：**Java 玩家为可点击文本**（MiniMessage `<click:run_command:'/customdeath checkin'>` 标签，模板 `settings.checkin.join-hint-message`），**基岩版玩家**（Geyser 连接，经 `isBedrock` 反射访问 `GeyserApi.api().connectionByUuid` 判断，无编译期依赖）**不支持点击交互，改用指令提示**（模板 `settings.checkin.join-hint-message-bedrock`）。
+- **击杀特效**：`KillEffectListener` 监听 `EntityDeathEvent`（**MONITOR 优先级**，被动只读，不干扰其他插件），玩家击杀生物后在**被击杀者死亡地点**播放粒子爆发（中心随机爆发 + 腰部高度横向冲击波圆环）与音效（`world.playSound`，击杀者与附近玩家按距离可听）。触发规则：仅由在线玩家造成击杀（`entity.getKiller()`，箭/投掷物击杀同样能取到射手）才触发；被击杀者为玩家（PVP）默认不触发（`include-players=true` 可开启）；非玩家生物默认仅对敌对生物（实现 `org.bukkit.entity.Enemy` 接口，含凋灵/末影龙等 Boss）生效（`only-hostile=false` 则对动物等所有非玩家生物生效）。全部表现由 `settings.kill-effect` 控制（`enabled` / `only-hostile` / `include-players` / `particle-enabled` / `particle` / `particle-amount` / `particle-speed` / `sound-enabled` / `sound` / `volume` / `pitch`），`ConfigManager` 对应 getter 均带默认值。**注意**：玩家死亡时 `PlayerDeathEvent` 与 `EntityDeathEvent` 会同时触发，PVP 特效默认关闭即是为了避免玩家死亡时出现击杀特效。
 - **合成配方**：`RecipeManager` 在插件启动时注册 3 个无序配方（产物均为带 PDC 标识的标准物品，可在合成台/配方书使用），**每种材料各需一个**，成本梯度：回城卷轴 = 纸 + 任意颜色床 + 末影珍珠；回溯卷轴 = 纸 + 末影珍珠 + 回响碎片；护身卷轴 = 纸 + 金锭 + 下界之星。总开关 `settings.recipes.enabled`（默认 true；关闭后需重启服务器移除已注册配方）。产物数量若后续调整，注意 ShapelessRecipe 产物为 `buildScrollXxx(1)`。
   - **基岩版玩家配方获取**：经 Geyser 连接的基岩版玩家配方书不显示自定义配方（Geyser 已知限制，产物物品需 creative_category 映射），故提供两条兜底：①玩家加入时聊天栏展示一次配方（`settings.recipes.join-hint-enabled` 开关，默认 true；`RecipeManager.buildRecipesOverview` 生成文案，**材料清单与配方定义严格同步**）；②`/customdeath recipe` 子命令随时查看。`onPlayerJoin` 的解锁与提示**延迟 1 秒执行**（Geyser 基岩会话建立晚于 Java 端 PlayerJoinEvent，立即发送会丢失）。
-- 事件优先级 `EventPriority.HIGHEST`；音效 `SoundCategory.PLAYERS`；广播按 `distanceSquared` 比较（nearby 模式）。
+- 事件优先级 `EventPriority.HIGHEST`（死亡播报）/ `EventPriority.MONITOR`（击杀特效）；音效 `SoundCategory.PLAYERS`；广播按 `distanceSquared` 比较（nearby 模式）。
 - 环境原因分类表 `CAUSE_CATEGORIES` 中，`FALLING_BLOCK→fall_block`、`DRAGON_BREATH/THORNS→magic` 等合并映射，改动前先确认现有归类。
 
 ## 改动后的验证清单

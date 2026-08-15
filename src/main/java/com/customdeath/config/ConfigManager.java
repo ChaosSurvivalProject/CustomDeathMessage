@@ -232,6 +232,95 @@ public class ConfigManager {
         return config.getString("settings.death-sound.target", "everyone").toLowerCase();
     }
 
+    // ============ 击杀特效（粒子 + 音效）============
+
+    /**
+     * @return 是否启用击杀特效（玩家击杀生物后触发粒子与音效）
+     */
+    public boolean isKillEffectEnabled() {
+        return config.getBoolean("settings.kill-effect.enabled", true);
+    }
+
+    /**
+     * @return true=仅对敌对生物（实现 {@link org.bukkit.entity.Enemy} 接口，含 Boss）生效；
+     *         false=对任意非玩家生物（含动物、傀儡等）生效
+     */
+    public boolean isKillEffectOnlyHostile() {
+        return config.getBoolean("settings.kill-effect.only-hostile", true);
+    }
+
+    /**
+     * @return PVP 击杀（玩家被玩家击杀）是否也触发击杀特效，默认关闭
+     */
+    public boolean isKillEffectIncludePlayers() {
+        return config.getBoolean("settings.kill-effect.include-players", false);
+    }
+
+    /**
+     * @return 是否播放击杀粒子特效
+     */
+    public boolean isKillEffectParticleEnabled() {
+        return config.getBoolean("settings.kill-effect.particle-enabled", true);
+    }
+
+    /**
+     * 解析击杀粒子类型（Bukkit {@link Particle} 枚举名）。
+     * <p>
+     * 注意：MC 1.20.5+ 粒子改名，旧名 {@code EXPLOSION_NORMAL} 已改为 {@code POOF}，
+     * 故默认值使用 1.21.1 下的新名 {@code POOF}（小型爆炸烟雾）。
+     *
+     * @return 粒子枚举，配置名无效或为空时返回 null（不播放粒子）
+     */
+    public Particle getKillEffectParticle() {
+        String name = config.getString("settings.kill-effect.particle", "POOF");
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        try {
+            return Particle.valueOf(name.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return 击杀粒子数量（中心爆发粒子数），至少 1
+     */
+    public int getKillEffectParticleAmount() {
+        return Math.max(1, config.getInt("settings.kill-effect.particle-amount", 40));
+    }
+
+    /**
+     * @return 击杀粒子初速（0.0 ~ 1.0，越大向外扩散越猛烈），至少 0
+     */
+    public double getKillEffectParticleSpeed() {
+        return Math.max(0.0, config.getDouble("settings.kill-effect.particle-speed", 0.4));
+    }
+
+    /**
+     * @return 是否播放击杀音效
+     */
+    public boolean isKillEffectSoundEnabled() {
+        return config.getBoolean("settings.kill-effect.sound-enabled", true);
+    }
+
+    /**
+     * 解析击杀音效类型（Bukkit {@link Sound} 枚举名）。
+     *
+     * @return 音效枚举，配置名无效或为空时返回 null（不播放）
+     */
+    public Sound getKillEffectSound() {
+        return parseSound("settings.kill-effect.sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
+    }
+
+    public float getKillEffectSoundVolume() {
+        return (float) config.getDouble("settings.kill-effect.volume", 1.0);
+    }
+
+    public float getKillEffectSoundPitch() {
+        return (float) config.getDouble("settings.kill-effect.pitch", 1.0);
+    }
+
     // ============ 击杀者互动 ============
 
     public boolean isKillerFeedbackEnabled() {

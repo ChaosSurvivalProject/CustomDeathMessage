@@ -6,6 +6,7 @@ import com.customdeath.data.CheckinManager;
 import com.customdeath.data.DeathPointManager;
 import com.customdeath.listener.CheckinListener;
 import com.customdeath.listener.DeathListener;
+import com.customdeath.listener.KillEffectListener;
 import com.customdeath.listener.ScrollListener;
 import com.customdeath.message.MessageFormatter;
 import com.customdeath.recipe.RecipeManager;
@@ -43,6 +44,7 @@ public final class CustomDeathMessages extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new ScrollListener(this), this);
         getServer().getPluginManager().registerEvents(new CheckinListener(this), this);
+        getServer().getPluginManager().registerEvents(new KillEffectListener(this), this);
 
         // 注册合成配方（护身/回城/回溯卷轴），同时注册为监听器以自动解锁配方书
         RecipeManager recipeManager = new RecipeManager(this);
