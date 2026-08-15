@@ -17,6 +17,7 @@ mvn clean package
 ```
 
 - 产物：`target/CustomDeathMessages-1.0.0.jar`（finalName 已配置，勿改名）
+- **CI**：`.github/workflows/build.yml` 会在 push/PR 到 `main` 时自动执行 `mvn -B clean package`（JDK 21 + Maven 缓存），构建产物作为 artifact 上传
 - 唯一依赖 `io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT`，scope 为 `provided`——**编译期依赖，不可打包进 jar**
 - **Java 21 是硬性要求**：paper-api 1.21.1 的 class 版本为 65（Java 21），JDK 17 编译会报「类文件具有错误的版本 65.0」。请使用任意 JDK 21+（如 Temurin 21、Zulu 21 等）并设置 `JAVA_HOME` 后构建。
 - `maven.compiler.release=17` 保留（输出 Java 17 bytecode，兼容性更好）；不要改依赖版本。
