@@ -189,6 +189,85 @@ settings:
     # 是否启用首杀文案（每次服务器重启后触发一次）
     enabled: true
 
+  # ============ 红名机制（罪恶值）============
+  # 玩家 PVP 击杀积累罪恶值，达到阈值后进入红名状态（头顶/Tab 名字变红，可选发光）；
+  # 击杀红名玩家默认不增加罪恶值（除魔卫道）；罪恶值随时间消退（可下线冻结），
+  # 低过阈值即退出红名。数据持久化到 data/sins.yml，重启不丢。
+  sin:
+    # 是否启用红名机制
+    enabled: true
+    # 击杀一名普通玩家增加的罪恶值
+    kill-gain: 10
+    # 红名阈值：罪恶值达到该值即进入红名状态
+    red-threshold: 50
+    # 罪恶值上限（0 = 不设上限）
+    max-sin: 0
+    # 击杀红名玩家是否不增加罪恶值（除魔卫道）
+    no-sin-kill-red: true
+    # 被击杀时减少的罪恶值（0 = 不减少；作为第二条消退渠道）
+    death-reduce: 0
+    # 红名玩家死亡后是否将罪恶值清零（以命赎罪、直接洗白；任意死因均触发）
+    red-death-clear: true
+    # ===== 红名临界预警 =====
+    warning:
+      # 是否启用预警
+      enabled: true
+      # 罪恶值达到红名阈值的该比例时进入临界预警区
+      # （0.8 = 罪恶值达阈值 50 的 80% 即 40 时开始预警）
+      threshold-ratio: 0.8
+      # 预警方式：
+      #   message   - 仅进入临界区时聊天提醒一次
+      #   actionbar - 临界/红名期间周期性 actionbar 提示
+      #   both      - 两者都要（默认）
+      mode: both
+      # actionbar 提示刷新间隔（秒）
+      actionbar-interval-seconds: 10
+    # ===== 罪恶值消退 =====
+    decay:
+      # 是否启用时间消退
+      enabled: true
+      # 消退间隔（秒）：每隔 N 秒按 amount 消退一次
+      interval-seconds: 60
+      # 每个消退间隔减少的罪恶值
+      amount: 1
+      # 仅在线时消退（true = 下线冻结罪恶值，离线/停机时间不计入消退；
+      # false = 离线也随时间消退，停机时间照算）
+      only-online: true
+    # ===== 红名外显 =====
+    red-name:
+      # 是否将红名玩家的头顶名字与玩家列表(Tab)名字显示为红色（经计分板队伍实现）
+      name-tag-red: true
+      # 红名玩家是否散发红光（发光轮廓）
+      glow: false
+    # ===== 罪恶值提示文案（MiniMessage 语法）=====
+    # 可用占位符：
+    #   {sin}       当前罪恶值
+    #   {threshold} 红名阈值
+    #   {amount}    本次变化量（增加/减少/消退）
+    #   {remaining} 距红名还差的罪恶值
+    #   {victim}    受害者玩家名
+    messages:
+      # 击杀普通玩家后的罪恶值提示（留空 = 不提示，避免刷屏）
+      kill-increase: ""
+      # 击杀红名玩家不增加罪恶值的提示
+      kill-red-no-sin: "<green><bold>⚔</bold> 你除掉了红名玩家 <red>{victim}</red>，不增加罪恶值</green>"
+      # 进入红名临界预警区（NORMAL → WARNING）的提示
+      warning-enter: "<red><bold>⚠ 预警</bold></red> 你的罪恶值已达 <yellow>{sin}/{threshold}</yellow>，再增加 <yellow>{remaining}</yellow> 点将进入红名状态！"
+      # 临界/红名期间周期性 actionbar 提示
+      warning-actionbar: "<red>罪恶值 {sin}/{threshold}，红名临界！</red>"
+      # 退出临界预警区（WARNING → NORMAL）的提示（留空 = 不提示）
+      warning-exit: ""
+      # 进入红名状态的提示
+      red-enter: "<dark_red><bold>☠ 红名警告</bold></dark_red> 你的罪恶值已达 <red>{threshold}</red>，你已成为红名玩家！"
+      # 退出红名状态（洗白）的提示
+      red-exit: "<green><bold>✔</bold> 你的罪恶值已消退至 <yellow>{threshold}</yellow> 以下，成功洗白</green>"
+      # 被击杀减少罪恶值的提示
+      death-reduce: "<gray>你被击杀，罪恶值 -{amount}（当前 {sin}）</gray>"
+      # 红名玩家死亡后罪恶值清零（以命赎罪）的提示
+      red-death-clear: "<green><bold>✔</bold> 你以生命赎清了 <red>{amount}</red> 点罪恶值，成功洗白</green>"
+      # 进服时若处于红名/临界状态的提示
+      join-status: "<red>你当前为红名玩家（罪恶值 {sin}/{threshold}），击杀你的玩家不增加罪恶值</red>"
+
   # ============ 卷轴（护身 / 回城 / 回溯）============
   # 护身卷轴被动触发（死亡时免掉落），回城/回溯卷轴手持右键使用；物品均以 PDC 标识识别
   scrolls:
@@ -588,3 +667,18 @@ messages:
     - "<gold><bold>【首杀】</bold></gold> <red>{player}</red> 成为了本服第一个倒下的人"
     - "<gradient:gold:red><bold>首杀！</bold></gradient> <red>{player}</red> 首当其冲地倒下了"
     - "<yellow><bold>第一滴血！</bold></yellow> <red>{player}</red> 贡献了本服的第一次死亡"
+
+  # ---------------- 红名玩家死亡（红名状态下死亡时使用，未配置则回退正常分类） ----------------
+  red-name-death:
+    - "<dark_red><bold>【红名陨落】</bold></dark_red> <red>{player}</red> 被 <red>{killer}</red> 击杀，大快人心！"
+    - "<dark_red><bold>【大快人心】</bold></dark_red> 红名 <red>{player}</red> 被 <red>{killer}</red> 就地正法！"
+    - "<gradient:dark_red:red><bold>红名伏诛！</bold></gradient> <red>{player}</red> 倒在了 <red>{killer}</red> 的脚下"
+    - "<dark_red><bold>【正义降临】</bold></dark_red> 作恶多端的 <red>{player}</red> 被 <red>{killer}</red> 终结"
+    - "<red><bold>{player}</bold></red> 这名红名玩家被 <red>{killer}</red> 消灭，世界清净了"
+
+  # ---------------- 击杀红名玩家反馈（actionbar，仅击杀红名玩家时使用，未配置则回退 killer-feedback） ----------------
+  red-name-killed:
+    - "<gold><bold>⚔ 除魔卫道！</bold></gold> 你消灭了红名玩家 <red>{player}</red>"
+    - "<gold><bold>⚔</bold></gold> 你除掉了红名 <red>{player}</red>，为民除害"
+    - "<aqua>干得漂亮！红名玩家 <red>{player}</red> 被你制裁了</aqua>"
+    - "<gold><bold>正义执行！</bold></gold> 红名玩家 <red>{player}</red> 已被你正法"

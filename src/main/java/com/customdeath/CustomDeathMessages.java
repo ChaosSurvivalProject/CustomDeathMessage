@@ -4,10 +4,12 @@ import com.customdeath.command.ReloadCommand;
 import com.customdeath.config.ConfigManager;
 import com.customdeath.data.CheckinManager;
 import com.customdeath.data.DeathPointManager;
+import com.customdeath.data.SinManager;
 import com.customdeath.listener.CheckinListener;
 import com.customdeath.listener.DeathListener;
 import com.customdeath.listener.KillEffectListener;
 import com.customdeath.listener.ScrollListener;
+import com.customdeath.listener.SinListener;
 import com.customdeath.message.MessageFormatter;
 import com.customdeath.recipe.RecipeManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +26,7 @@ public final class CustomDeathMessages extends JavaPlugin {
     private MessageFormatter messageFormatter;
     private DeathPointManager deathPointManager;
     private CheckinManager checkinManager;
+    private SinManager sinManager;
 
     @Override
     public void onEnable() {
@@ -40,11 +43,16 @@ public final class CustomDeathMessages extends JavaPlugin {
         // 初始化每日签到记录（/customdeath checkin）
         checkinManager = new CheckinManager(this);
 
+        // 初始化红名机制（罪恶值）并启动消退/预警调度任务
+        sinManager = new SinManager(this);
+        sinManager.startTasks();
+
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new ScrollListener(this), this);
         getServer().getPluginManager().registerEvents(new CheckinListener(this), this);
         getServer().getPluginManager().registerEvents(new KillEffectListener(this), this);
+        getServer().getPluginManager().registerEvents(new SinListener(this), this);
 
         // 注册合成配方（护身/回城/回溯卷轴），同时注册为监听器以自动解锁配方书
         RecipeManager recipeManager = new RecipeManager(this);
@@ -62,6 +70,10 @@ public final class CustomDeathMessages extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // 停止红名消退/预警任务并强制落盘
+        if (sinManager != null) {
+            sinManager.shutdown();
+        }
         getLogger().info("CustomDeathMessages 已卸载");
     }
 
@@ -79,5 +91,9 @@ public final class CustomDeathMessages extends JavaPlugin {
 
     public CheckinManager getCheckinManager() {
         return checkinManager;
+    }
+
+    public SinManager getSinManager() {
+        return sinManager;
     }
 }

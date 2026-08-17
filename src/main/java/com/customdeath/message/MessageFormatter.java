@@ -4,6 +4,8 @@ import com.customdeath.config.ConfigManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+import java.util.Map;
+
 /**
  * 死亡消息格式化器。
  * <p>
@@ -122,6 +124,35 @@ public class MessageFormatter {
             text = text.replace("{title}", title);
         }
 
+        try {
+            return miniMessage.deserialize(text);
+        } catch (Exception e) {
+            // MiniMessage 解析失败时降级为纯文本
+            return Component.text(text);
+        }
+    }
+
+    /**
+     * 通用占位符替换 + MiniMessage 解析（供红名罪恶值等自定义文案使用）。
+     * <p>
+     * 将模板中的 {@code {key}} 逐一替换为 placeholders 提供的文本（缺失的占位符原样保留），
+     * 再解析为 Adventure Component；MiniMessage 解析失败时降级为纯文本。
+     *
+     * @param template     模板文本，含若干 {@code {key}} 占位符
+     * @param placeholders 占位符名（不含花括号）→ 替换文本的映射
+     * @return 解析后的 Component
+     */
+    public Component formatWith(String template, Map<String, String> placeholders) {
+        if (template == null || template.isBlank()) {
+            return Component.empty();
+        }
+        String text = template;
+        if (placeholders != null) {
+            for (Map.Entry<String, String> e : placeholders.entrySet()) {
+                String value = e.getValue() == null ? "" : e.getValue();
+                text = text.replace("{" + e.getKey() + "}", value);
+            }
+        }
         try {
             return miniMessage.deserialize(text);
         } catch (Exception e) {

@@ -11,7 +11,7 @@ softdepend:
 commands:
   customdeath:
     description: 自定义死亡消息插件主命令
-    usage: /cdm <reload|version|recipe|checkin|scroll>
+    usage: /cdm <reload|version|recipe|checkin|scroll|sin>
     aliases:
       - cdm
 
@@ -21,4 +21,7 @@ permissions:
     default: op
   customdeath.scroll:
     description: 允许发放护身/回城/回溯卷轴
+    default: op
+  customdeath.sin:
+    description: 允许查看/设置其他玩家的罪恶值（红名机制管理）
     default: op

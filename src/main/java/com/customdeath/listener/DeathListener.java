@@ -170,8 +170,14 @@ public class DeathListener implements Listener {
 
         Player player = event.getEntity();
 
+        // 快照死亡时刻的受害者红名状态（在罪恶值变化前取值，供红名死亡播报与击杀反馈判定）
+        boolean victimRedAtDeath = plugin.getSinManager().isRedName(player.getUniqueId());
+
         // 记录最近死亡点（供回溯卷轴使用，不受 enabled 开关影响）
         plugin.getDeathPointManager().recordDeath(player);
+
+        // 记录罪恶值变化（被击杀按 death-reduce 减少罪恶值，受 settings.sin 开关控制）
+        plugin.getSinManager().recordDeath(player);
 
         DeathInfo info = resolveDeathInfo(player);
 
@@ -198,13 +204,22 @@ public class DeathListener implements Listener {
             if (killer != null) {
                 killerUuid = killer.getUniqueId();
                 streak = killStreaks.merge(killerUuid, 1, Integer::sum);
+                // 红名机制：击杀者增加罪恶值（击杀红名玩家是否免罪由配置控制）
+                plugin.getSinManager().recordKill(killer, player);
             }
         }
         // 死亡打断死者自己的连杀
         killStreaks.remove(player.getUniqueId());
 
-        // 选取消息模板（首杀优先，未配置首杀分类时回退正常分类）
-        String template = firstBlood ? cfg.pickTemplate("first-blood") : cfg.pickTemplate(info.category());
+        // 选取消息模板：首杀优先；红名玩家死亡优先 red-name-death（未配置则回退正常分类）
+        String template;
+        if (firstBlood) {
+            template = cfg.pickTemplate("first-blood");
+        } else if (victimRedAtDeath && cfg.hasCategory("red-name-death")) {
+            template = cfg.pickTemplate("red-name-death");
+        } else {
+            template = cfg.pickTemplate(info.category());
+        }
         if (template == null) {
             return;
         }
@@ -237,15 +252,20 @@ public class DeathListener implements Listener {
         broadcast(player, message);
 
         // 击杀者专属反馈：通过 actionbar 仅向击杀者本人展示（仅 PVP，不进入聊天栏）
-        if (pvp && killerUuid != null && cfg.isKillerFeedbackEnabled()
-                && cfg.hasCategory("killer-feedback")) {
+        // 击杀红名玩家时优先使用 red-name-killed 文案（未配置则回退 killer-feedback）
+        if (pvp && killerUuid != null && cfg.isKillerFeedbackEnabled()) {
             Player killer = Bukkit.getPlayer(killerUuid);
             if (killer != null) {
-                String feedback = cfg.pickTemplate("killer-feedback");
-                if (feedback != null) {
-                    killer.sendActionBar(plugin.getMessageFormatter().format(
-                            feedback, player.getName(), info.killerName(), info.weapon(), null,
-                            info.damage(), player.getWorld().getName()));
+                String category = victimRedAtDeath && cfg.hasCategory("red-name-killed")
+                        ? "red-name-killed"
+                        : (cfg.hasCategory("killer-feedback") ? "killer-feedback" : null);
+                if (category != null) {
+                    String feedback = cfg.pickTemplate(category);
+                    if (feedback != null) {
+                        killer.sendActionBar(plugin.getMessageFormatter().format(
+                                feedback, player.getName(), info.killerName(), info.weapon(), null,
+                                info.damage(), player.getWorld().getName()));
+                    }
                 }
             }
         }

@@ -429,6 +429,109 @@ public class ConfigManager {
         return config.getBoolean("settings.first-blood.enabled", true);
     }
 
+    // ============ 红名机制（罪恶值）============
+
+    public boolean isSinEnabled() {
+        return config.getBoolean("settings.sin.enabled", true);
+    }
+
+    /** @return 击杀一名普通玩家增加的罪恶值 */
+    public int getSinKillGain() {
+        return Math.max(0, config.getInt("settings.sin.kill-gain", 10));
+    }
+
+    /** @return 红名阈值（罪恶值 >= 该值即红名），至少 1 */
+    public int getSinRedThreshold() {
+        return Math.max(1, config.getInt("settings.sin.red-threshold", 50));
+    }
+
+    /** @return 罪恶值上限（0 = 不设上限），至少 0 */
+    public int getSinMax() {
+        return Math.max(0, config.getInt("settings.sin.max-sin", 0));
+    }
+
+    /** @return 击杀红名玩家是否不增加罪恶值（除魔卫道） */
+    public boolean isSinNoKillRed() {
+        return config.getBoolean("settings.sin.no-sin-kill-red", true);
+    }
+
+    /** @return 被击杀时减少的罪恶值（0 = 不减少） */
+    public int getSinDeathReduce() {
+        return Math.max(0, config.getInt("settings.sin.death-reduce", 0));
+    }
+
+    /** @return 红名玩家死亡后是否将罪恶值清零（以命赎罪，洗白） */
+    public boolean isSinRedDeathClear() {
+        return config.getBoolean("settings.sin.red-death-clear", true);
+    }
+
+    // ============ 红名临界预警 ============
+
+    public boolean isSinWarningEnabled() {
+        return config.getBoolean("settings.sin.warning.enabled", true);
+    }
+
+    /** @return 罪恶值达到红名阈值的该比例时进入临界预警区（0.0 ~ 1.0） */
+    public double getSinWarningRatio() {
+        return Math.min(1.0, Math.max(0.0, config.getDouble("settings.sin.warning.threshold-ratio", 0.8)));
+    }
+
+    /** @return 预警方式：message / actionbar / both */
+    public String getSinWarningMode() {
+        return config.getString("settings.sin.warning.mode", "both").toLowerCase();
+    }
+
+    /** @return 临界/红名期间 actionbar 刷新间隔（秒），至少 1 */
+    public int getSinWarningActionbarIntervalSeconds() {
+        return Math.max(1, config.getInt("settings.sin.warning.actionbar-interval-seconds", 10));
+    }
+
+    // ============ 罪恶值消退 ============
+
+    public boolean isSinDecayEnabled() {
+        return config.getBoolean("settings.sin.decay.enabled", true);
+    }
+
+    /** @return 消退间隔（秒），至少 1 */
+    public int getSinDecayIntervalSeconds() {
+        return Math.max(1, config.getInt("settings.sin.decay.interval-seconds", 60));
+    }
+
+    /** @return 每个消退间隔减少的罪恶值，至少 0 */
+    public int getSinDecayAmount() {
+        return Math.max(0, config.getInt("settings.sin.decay.amount", 1));
+    }
+
+    /** @return true=仅在线时消退（下线冻结罪恶值），false=离线也随时间消退 */
+    public boolean isSinDecayOnlyOnline() {
+        return config.getBoolean("settings.sin.decay.only-online", true);
+    }
+
+    // ============ 红名外显 ============
+
+    /** @return 是否将红名玩家头顶与玩家列表(Tab)名字显示为红色（计分板队伍） */
+    public boolean isSinNameTagRed() {
+        return config.getBoolean("settings.sin.red-name.name-tag-red", true);
+    }
+
+    /** @return 红名玩家是否散发红光（发光轮廓） */
+    public boolean isSinGlow() {
+        return config.getBoolean("settings.sin.red-name.glow", false);
+    }
+
+    // ============ 红名文案 ============
+
+    /**
+     * 读取罪恶值提示文案模板（settings.sin.messages.<key>）。
+     *
+     * @param key      文案键名
+     * @param fallback 缺省时的默认文案
+     * @return 文案模板（MiniMessage，支持 {sin} {threshold} {amount} {remaining} {victim} 占位符）
+     */
+    public String getSinMessage(String key, String fallback) {
+        return config.getString("settings.sin.messages." + key, fallback);
+    }
+
     // ============ 卷轴（护身 / 回城 / 回溯，统一物品体系）============
 
     /** 护身卷轴在物品 PDC 中的标识 key（死亡保护，防重命名误判）。 */

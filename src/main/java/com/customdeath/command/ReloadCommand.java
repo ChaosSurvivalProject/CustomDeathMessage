@@ -3,6 +3,7 @@ package com.customdeath.command;
 import com.customdeath.CustomDeathMessages;
 import com.customdeath.config.ConfigManager;
 import com.customdeath.data.CheckinManager;
+import com.customdeath.data.SinManager;
 import com.customdeath.recipe.RecipeManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -81,6 +82,7 @@ public class ReloadCommand implements TabExecutor {
                 }
                 handleCheckin(player);
             }
+            case "sin" -> handleSin(sender, args);
             default -> sendHelp(sender);
         }
         return true;
@@ -223,11 +225,116 @@ public class ReloadCommand implements TabExecutor {
         rewardNames.add(cnName + "×" + amount);
     }
 
+    /**
+     * /customdeath sin [get|set|add <玩家> <数值>] — 查看/管理罪恶值（红名机制）。
+     * <p>
+     * 无参数时玩家查看自己的罪恶值与红名状态；{@code get/set/add} 需权限
+     * {@code customdeath.sin}（默认 op），目标须在线（与 scroll 子命令一致）。
+     */
+    private void handleSin(CommandSender sender, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (!cfg.isSinEnabled()) {
+            sender.sendMessage(Component.text("红名机制未启用", NamedTextColor.RED));
+            return;
+        }
+        SinManager sinManager = plugin.getSinManager();
+
+        // 无参数：查看自己的罪恶值与状态
+        if (args.length == 1) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(Component.text("用法：/cdm sin [get|set|add <玩家> <数值>]", NamedTextColor.YELLOW));
+                return;
+            }
+            sendSinInfo(sender, player);
+            return;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "get" -> {
+                if (!sender.hasPermission("customdeath.sin")) {
+                    sender.sendMessage(Component.text("你没有权限执行该命令", NamedTextColor.RED));
+                    return;
+                }
+                if (args.length < 3) {
+                    sender.sendMessage(Component.text("用法：/cdm sin get <玩家>", NamedTextColor.YELLOW));
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    sender.sendMessage(Component.text("玩家 " + args[2] + " 不在线", NamedTextColor.RED));
+                    return;
+                }
+                sendSinInfo(sender, target);
+            }
+            case "set", "add" -> {
+                if (!sender.hasPermission("customdeath.sin")) {
+                    sender.sendMessage(Component.text("你没有权限执行该命令", NamedTextColor.RED));
+                    return;
+                }
+                if (args.length < 4) {
+                    sender.sendMessage(Component.text("用法：/cdm sin " + args[1].toLowerCase() + " <玩家> <数值>", NamedTextColor.YELLOW));
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    sender.sendMessage(Component.text("玩家 " + args[2] + " 不在线", NamedTextColor.RED));
+                    return;
+                }
+                int value;
+                try {
+                    value = Integer.parseInt(args[3]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Component.text("数值必须是整数", NamedTextColor.RED));
+                    return;
+                }
+                if ("set".equalsIgnoreCase(args[1])) {
+                    sinManager.setSin(target, value);
+                    sender.sendMessage(Component.text(
+                            "已将 " + target.getName() + " 的罪恶值设为 " + sinManager.getSin(target.getUniqueId()),
+                            NamedTextColor.GREEN));
+                } else {
+                    sinManager.addSin(target, value);
+                    sender.sendMessage(Component.text(
+                            "已调整 " + target.getName() + " 罪恶值 " + (value >= 0 ? "+" : "") + value
+                                    + "，当前 " + sinManager.getSin(target.getUniqueId()),
+                            NamedTextColor.GREEN));
+                }
+            }
+            default -> sender.sendMessage(Component.text(
+                    "用法：/cdm sin [get|set|add <玩家> <数值>]", NamedTextColor.YELLOW));
+        }
+    }
+
+    /**
+     * 向命令执行者展示指定玩家的罪恶值与红名状态。
+     */
+    private void sendSinInfo(CommandSender sender, Player target) {
+        SinManager sinManager = plugin.getSinManager();
+        int sin = sinManager.getSin(target.getUniqueId());
+        int threshold = plugin.getConfigManager().getSinRedThreshold();
+        SinManager.SinState state = sinManager.getState(target.getUniqueId());
+        String stateName = switch (state) {
+            case RED -> "红名";
+            case WARNING -> "红名临界";
+            default -> "正常";
+        };
+        NamedTextColor stateColor = switch (state) {
+            case RED -> NamedTextColor.DARK_RED;
+            case WARNING -> NamedTextColor.RED;
+            default -> NamedTextColor.GREEN;
+        };
+        sender.sendMessage(Component.text("===== 罪恶值 =====", NamedTextColor.GOLD));
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.YELLOW)
+                .append(Component.text("：罪恶值 " + sin + "/" + threshold, NamedTextColor.GRAY))
+                .append(Component.text("  状态：", NamedTextColor.GRAY))
+                .append(Component.text(stateName, stateColor)));
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             String input = args[0].toLowerCase();
-            return List.of("reload", "version", "scroll", "recipe", "checkin").stream()
+            return List.of("reload", "version", "scroll", "recipe", "checkin", "sin").stream()
                     .filter(s -> s.startsWith(input))
                     .toList();
         }
@@ -238,8 +345,14 @@ public class ReloadCommand implements TabExecutor {
                         .filter(s -> s.startsWith(input))
                         .toList();
             }
+            if ("sin".equalsIgnoreCase(args[0])) {
+                return List.of("get", "set", "add").stream()
+                        .filter(s -> s.startsWith(input))
+                        .toList();
+            }
         }
-        if (args.length == 3 && "scroll".equalsIgnoreCase(args[0])) {
+        if (args.length == 3
+                && ("scroll".equalsIgnoreCase(args[0]) || "sin".equalsIgnoreCase(args[0]))) {
             return playerNames(args[2].toLowerCase());
         }
         return List.of();
@@ -265,5 +378,9 @@ public class ReloadCommand implements TabExecutor {
                 .append(Component.text(" - 每日签到领取卷轴奖励（每天一次）", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text("/cdm scroll <protect|town|recall> <玩家> [数量]", NamedTextColor.YELLOW)
                 .append(Component.text(" - 发放护身/回城/回溯卷轴", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text("/cdm sin", NamedTextColor.YELLOW)
+                .append(Component.text(" - 查看罪恶值/红名状态", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text("/cdm sin get|set|add <玩家> <数值>", NamedTextColor.YELLOW)
+                .append(Component.text(" - 管理罪恶值（需 customdeath.sin）", NamedTextColor.GRAY)));
     }
 }
