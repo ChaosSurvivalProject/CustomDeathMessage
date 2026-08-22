@@ -38,18 +38,22 @@ settings:
     join-hint-enabled: true
 
   # ============ 每日签到 ============
-  # 玩家每天可通过 /customdeath checkin 签到领取卷轴奖励；
+  # 玩家每天可通过 /customdeath checkin 签到，随机获得一种卷轴；
   # 同一天不可重复签到，跨天后（服务器 0 点）自动重置
   checkin:
     # 是否启用每日签到
     enabled: true
-    # 签到奖励：三种卷轴各发放的数量（0 = 不发放该种）
-    rewards:
-      protect: 1
-      town: 1
-      recall: 1
-    # 签到成功提示（{rewards} 会被替换为实际奖励列表，如「护身卷轴×1、回城卷轴×1、回溯卷轴×1」）
-    success-message: "<green><bold>✔</bold> 签到成功！获得：{rewards}，明天 0 点后可再次签到</green>"
+    # 随机抽取各卷轴的中奖概率（单位：%）
+    # 三项之和不要求恰为 100，实际概率 = 该项数值 ÷ 三项总和；负数按 0 处理
+    chance:
+      protect: 5    # 护身卷轴
+      recall: 20    # 回溯卷轴
+      town: 75      # 回城卷轴
+    # 签到成功提示（MiniMessage）
+    # 占位符：{rewards}=实际获得的卷轴（如「护身卷轴×1」）；{chance}=本次实际中奖概率数值
+    # 默认模板末尾为可点击文本，点击执行 /cdm checkin chance 查看三种卷轴的抽取概率；
+    # 不需要该交互文本时删除模板中的 <click:...>...</click> 片段即可
+    success-message: "<green><bold>✔</bold> 签到成功！你以 <gold>{chance}%</gold> 的概率获得了 {rewards}，明天 0 点后可再次签到</green> <gray><click:run_command:'/customdeath checkin chance'><underlined>[点击查看各卷轴概率]</underlined></click></gray>"
     # 当天重复签到提示
     already-message: "<red>你今天已经签到过了，明天 0 点后再来吧</red>"
     # 玩家进服时，若当天尚未签到，是否在聊天栏提示可领取（点击文本直接签到）

@@ -105,21 +105,35 @@ public class ConfigManager {
     }
 
     /**
-     * 签到奖励中指定卷轴的发放数量。
+     * 签到随机抽取中指定卷轴的中奖概率。
+     * <p>
+     * 数值可理解为百分比（%），三项之和不要求恰为 100：
+     * 实际中奖概率 = 该项数值 ÷ 三项总和（负数按 0 处理）。
      *
      * @param type 卷轴类型：protect / town / recall
-     * @return 发放数量（0 表示不发放该种卷轴）
+     * @return 中奖概率权重，默认 protect=5 / recall=20 / town=75
      */
-    public int getCheckinRewardAmount(String type) {
-        return config.getInt("settings.checkin.rewards." + type, 1);
+    public double getCheckinScrollChance(String type) {
+        return switch (type) {
+            case "protect" -> Math.max(0, config.getDouble("settings.checkin.chance.protect", 5.0));
+            case "recall" -> Math.max(0, config.getDouble("settings.checkin.chance.recall", 20.0));
+            case "town" -> Math.max(0, config.getDouble("settings.checkin.chance.town", 75.0));
+            default -> 0;
+        };
     }
 
     /**
-     * @return 签到成功提示模板（支持 {@code {rewards}} 占位符，替换为实际奖励列表）
+     * @return 签到成功提示模板（MiniMessage；占位符：{@code {rewards}} 替换为获得的卷轴、
+     *         {@code {chance}} 替换为本次实际中奖概率百分比数值；
+     *         默认模板末尾含 {@code <click:run_command:'/customdeath checkin chance'>}
+     *         点击查看各卷轴概率的交互文本）
      */
     public String getCheckinSuccessMessage() {
         return config.getString("settings.checkin.success-message",
-                "<green><bold>✔</bold> 签到成功！获得：{rewards}，明天 0 点后可再次签到</green>");
+                "<green><bold>✔</bold> 签到成功！你以 <gold>{chance}%</gold> 的概率获得了 {rewards}"
+                        + "，明天 0 点后可再次签到</green> "
+                        + "<gray><click:run_command:'/customdeath checkin chance'>"
+                        + "<underlined>[点击查看各卷轴概率]</underlined></click></gray>");
     }
 
     /**

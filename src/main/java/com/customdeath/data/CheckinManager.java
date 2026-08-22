@@ -54,6 +54,21 @@ public class CheckinManager {
         save();
     }
 
+    /**
+     * 重置玩家的签到状态：清除其今日签到记录，允许当天重新签到，并立即落盘。
+     *
+     * @param playerId 玩家 UUID
+     * @return true = 存在记录并已清除；false = 该玩家今天本就未签到
+     */
+    public boolean resetCheckedIn(UUID playerId) {
+        if (checkins.remove(playerId) == null) {
+            return false;
+        }
+        data.set(playerId.toString(), null);
+        save();
+        return true;
+    }
+
     // ==================== 持久化 ====================
 
     /** 从磁盘加载签到记录。 */
