@@ -1,8 +1,20 @@
 # CustomDeathMessages
 
+<p align="center">
+  <img src="assets/images/banner.png" alt="CustomDeathMessage 宣传图" width="820">
+</p>
+
+
 个性化死亡播报插件，替代原版死亡信息，支持自定义文案与颜色（MiniMessage 富文本）。
 
 > 目标服务器：**Purpur 26.2（MC 1.21.1）** · 消息格式：**MiniMessage**（Adventure）
+
+## 效果预览
+
+<p align="center">
+  <img src="assets/images/demo.png" alt="CustomDeathMessage 演示图" width="720">
+</p>
+
 
 ## 功能特性
 
